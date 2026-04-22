@@ -10,12 +10,17 @@ interface Props {
   onClose: () => void;
 }
 
-function todayUtcString(): string {
+function utcDateString(offsetDays = 0): string {
   const now = new Date();
+  now.setUTCDate(now.getUTCDate() - offsetDays);
   const y = now.getUTCFullYear();
   const m = String(now.getUTCMonth() + 1).padStart(2, "0");
   const d = String(now.getUTCDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
+}
+
+function todayUtcString(): string {
+  return utcDateString(0);
 }
 
 export function NodeDetailModal({ node, onClose }: Props) {
@@ -109,7 +114,7 @@ export function NodeDetailModal({ node, onClose }: Props) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-2">
             <label className="text-[10px] text-[#666] uppercase tracking-wider">
               SELECT_DATE (UTC)
             </label>
@@ -120,6 +125,30 @@ export function NodeDetailModal({ node, onClose }: Props) {
               onChange={(e) => setSelectedDate(e.target.value)}
               className="bg-black border border-[#444] rounded-none px-3 py-2 text-sm font-mono text-white focus:outline-none focus:border-white [color-scheme:dark]"
             />
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: "TODAY", offset: 0 },
+                { label: "DAY BEFORE", offset: 1 },
+                { label: "TWO DAYS BEFORE", offset: 2 },
+              ].map((preset) => {
+                const value = utcDateString(preset.offset);
+                const active = selectedDate === value;
+                return (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => setSelectedDate(value)}
+                    className={`text-[10px] font-mono uppercase tracking-wider border px-2 py-2 transition-colors ${
+                      active
+                        ? "bg-white text-black border-white"
+                        : "bg-black text-[#888] border-[#444] hover:border-white hover:text-white"
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 

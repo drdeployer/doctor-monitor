@@ -26,8 +26,10 @@ const nodeSchema = z.object({
   nickname: z.string().min(1, "Nickname is required").max(50),
   wallet: z.string().regex(/^0x[0-9a-fA-F]{40}$/, "Must be a valid 42-character hex wallet address starting with 0x"),
   modelName: z.string().max(100).optional().or(z.literal("")),
+  modelNumber: z.string().max(100).optional().or(z.literal("")),
   internetSpeed: z.string().min(1, "Internet speed is required"),
-  vram: z.string().min(1, "VRAM amount is required"),
+  vram: z.string().regex(/^\d+(\.\d+)?$/, "VRAM must be a number"),
+  ram: z.string().optional().refine((v) => !v || /^\d+(\.\d+)?$/.test(v), "RAM must be a number"),
 });
 
 type NodeFormValues = z.infer<typeof nodeSchema>;
@@ -88,8 +90,10 @@ export function Dashboard() {
       nickname: "",
       wallet: "",
       modelName: "",
+      modelNumber: "",
       internetSpeed: "",
       vram: "",
+      ram: "",
     }
   });
 
@@ -109,16 +113,22 @@ export function Dashboard() {
   };
 
   const onSubmit = async (data: NodeFormValues) => {
+    const payload = {
+      ...data,
+      modelName: data.modelName || null,
+      modelNumber: data.modelNumber || null,
+      ram: data.ram || null,
+    };
     try {
       if (editingNodeId) {
         await updateNode.mutateAsync({
           id: editingNodeId,
-          data
+          data: payload,
         });
         toast({ title: "SYSTEM UPDATE", description: `NODE [${data.nickname}] UPDATED SUCCESSFULLY` });
       } else {
         await createNode.mutateAsync({
-          data: { ...data, sessionId }
+          data: { ...payload, sessionId }
         });
         toast({ title: "SYSTEM UPDATE", description: `NODE [${data.nickname}] INITIALIZED SUCCESSFULLY` });
       }
@@ -128,7 +138,7 @@ export function Dashboard() {
       queryClient.invalidateQueries({ queryKey: getGetNetworkSummaryQueryKey() });
       
       setEditingNodeId(null);
-      form.reset({ nickname: "", wallet: "", modelName: "", internetSpeed: "", vram: "" });
+      form.reset({ nickname: "", wallet: "", modelName: "", modelNumber: "", internetSpeed: "", vram: "", ram: "" });
       setSpeedValue("");
       setSpeedUnit("Gbps");
     } catch (error) {
@@ -147,8 +157,10 @@ export function Dashboard() {
       nickname: node.nickname,
       wallet: node.wallet,
       modelName: node.modelName ?? "",
+      modelNumber: node.modelNumber ?? "",
       internetSpeed: node.internetSpeed,
-      vram: node.vram,
+      vram: (node.vram || "").replace(/[^\d.]/g, ""),
+      ram: (node.ram ?? "").replace(/[^\d.]/g, ""),
     });
     setSpeedValue(parsed.value);
     setSpeedUnit(parsed.unit);
@@ -209,10 +221,10 @@ export function Dashboard() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="modelName" className="text-xs text-[#888]">HARDWARE_MODEL <span className="text-[#555]">(OPTIONAL)</span></Label>
-              <Input 
-                id="modelName" 
-                {...form.register("modelName")} 
+              <Label htmlFor="modelName" className="text-xs text-[#888]">HARDWARE <span className="text-[#555]">(OPTIONAL)</span></Label>
+              <Input
+                id="modelName"
+                {...form.register("modelName")}
                 className="bg-black border-[#444] rounded-none focus-visible:ring-0 focus-visible:border-white text-white font-mono"
                 placeholder="e.g. RTX 4090"
               />
@@ -220,14 +232,50 @@ export function Dashboard() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="vram" className="text-xs text-[#888]">VRAM_CAPACITY</Label>
-              <Input 
-                id="vram" 
-                {...form.register("vram")} 
+              <Label htmlFor="modelNumber" className="text-xs text-[#888]">MODEL_NAME / MODEL_NUMBER <span className="text-[#555]">(OPTIONAL)</span></Label>
+              <Input
+                id="modelNumber"
+                {...form.register("modelNumber")}
                 className="bg-black border-[#444] rounded-none focus-visible:ring-0 focus-visible:border-white text-white font-mono"
-                placeholder="e.g. 24 GB"
+                placeholder="e.g. ASUS TUF GAMING / 90YV0FT0-M0NA00"
               />
+              {form.formState.errors.modelNumber && <span className="text-xs text-red-500">{form.formState.errors.modelNumber.message}</span>}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="vram" className="text-xs text-[#888]">VRAM_CAPACITY (GB)</Label>
+              <div className="flex">
+                <Input
+                  id="vram"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="1"
+                  {...form.register("vram")}
+                  className="bg-black border-[#444] rounded-none focus-visible:ring-0 focus-visible:border-white text-white font-mono flex-1 border-r-0"
+                  placeholder="e.g. 24"
+                />
+                <span className="px-3 flex items-center text-xs font-mono uppercase tracking-wider border border-[#444] bg-[#0a0a0a] text-[#888]">GB</span>
+              </div>
               {form.formState.errors.vram && <span className="text-xs text-red-500">{form.formState.errors.vram.message}</span>}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="ram" className="text-xs text-[#888]">RAM_CAPACITY (GB) <span className="text-[#555]">(OPTIONAL)</span></Label>
+              <div className="flex">
+                <Input
+                  id="ram"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="1"
+                  {...form.register("ram")}
+                  className="bg-black border-[#444] rounded-none focus-visible:ring-0 focus-visible:border-white text-white font-mono flex-1 border-r-0"
+                  placeholder="e.g. 32"
+                />
+                <span className="px-3 flex items-center text-xs font-mono uppercase tracking-wider border border-[#444] bg-[#0a0a0a] text-[#888]">GB</span>
+              </div>
+              {form.formState.errors.ram && <span className="text-xs text-red-500">{form.formState.errors.ram.message}</span>}
             </div>
 
             <div className="flex flex-col gap-2">
@@ -293,7 +341,7 @@ export function Dashboard() {
                   variant="outline"
                   onClick={() => {
                     setEditingNodeId(null);
-                    form.reset({ nickname: "", wallet: "", modelName: "", internetSpeed: "", vram: "" });
+                    form.reset({ nickname: "", wallet: "", modelName: "", modelNumber: "", internetSpeed: "", vram: "", ram: "" });
                     setSpeedValue("");
                     setSpeedUnit("Gbps");
                   }}
@@ -354,8 +402,20 @@ export function Dashboard() {
                     <span className="text-white">{node.modelName || "—"}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[#666]">UPLINK/VRAM</span>
-                    <span className="text-white">{node.internetSpeed} / {node.vram}</span>
+                    <span className="text-[#666]">MODEL</span>
+                    <span className="text-white truncate" title={node.modelNumber ?? undefined}>{node.modelNumber || "—"}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[#666]">UPLINK</span>
+                    <span className="text-white">{node.internetSpeed}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[#666]">VRAM</span>
+                    <span className="text-white">{node.vram ? `${String(node.vram).match(/[\d.]+/)?.[0] ?? node.vram} GB` : "—"}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[#666]">RAM</span>
+                    <span className="text-white">{node.ram ? `${String(node.ram).match(/[\d.]+/)?.[0] ?? node.ram} GB` : "—"}</span>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[#666]">DAILY_REWARD</span>

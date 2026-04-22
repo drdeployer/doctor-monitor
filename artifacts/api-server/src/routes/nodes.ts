@@ -25,8 +25,10 @@ async function withStats(node: NodeRow) {
     nickname: node.nickname,
     wallet: node.wallet,
     modelName: node.modelName,
+    modelNumber: node.modelNumber,
     internetSpeed: node.internetSpeed,
     vram: node.vram,
+    ram: node.ram,
     createdAt: node.createdAt.toISOString(),
     updatedAt: node.updatedAt.toISOString(),
     ...stats,
@@ -57,8 +59,10 @@ router.post("/nodes", async (req, res) => {
       nickname: body.nickname,
       wallet: body.wallet,
       modelName: body.modelName ?? null,
+      modelNumber: body.modelNumber ?? null,
       internetSpeed: body.internetSpeed,
       vram: body.vram,
+      ram: body.ram ?? null,
     })
     .returning();
   if (!created) {

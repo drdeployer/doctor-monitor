@@ -12,6 +12,10 @@ export interface NodeCreate {
   wallet: string;
   /** @nullable */
   modelName?: string | null;
+  /** @nullable */
+  modelNumber?: string | null;
   internetSpeed: string;
   vram: string;
+  /** @nullable */
+  ram?: string | null;
 }

@@ -178,10 +178,14 @@ components:
           type: string
         modelName:
           type: ["string", "null"]
+        modelNumber:
+          type: ["string", "null"]
         internetSpeed:
           type: string
         vram:
           type: string
+        ram:
+          type: ["string", "null"]
         createdAt:
           type: string
         updatedAt:
@@ -192,8 +196,10 @@ components:
         - nickname
         - wallet
         - modelName
+        - modelNumber
         - internetSpeed
         - vram
+        - ram
         - createdAt
         - updatedAt
     NodeWithStats:
@@ -209,10 +215,14 @@ components:
           type: string
         modelName:
           type: ["string", "null"]
+        modelNumber:
+          type: ["string", "null"]
         internetSpeed:
           type: string
         vram:
           type: string
+        ram:
+          type: ["string", "null"]
         createdAt:
           type: string
         updatedAt:
@@ -235,8 +245,10 @@ components:
         - nickname
         - wallet
         - modelName
+        - modelNumber
         - internetSpeed
         - vram
+        - ram
         - createdAt
         - updatedAt
         - online
@@ -256,10 +268,14 @@ components:
           type: string
         modelName:
           type: ["string", "null"]
+        modelNumber:
+          type: ["string", "null"]
         internetSpeed:
           type: string
         vram:
           type: string
+        ram:
+          type: ["string", "null"]
       required:
         - sessionId
         - nickname
@@ -275,10 +291,14 @@ components:
           type: string
         modelName:
           type: ["string", "null"]
+        modelNumber:
+          type: ["string", "null"]
         internetSpeed:
           type: string
         vram:
           type: string
+        ram:
+          type: ["string", "null"]
     RewardTx:
       type: object
       properties:

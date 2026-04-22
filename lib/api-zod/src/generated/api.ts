@@ -23,8 +23,10 @@ export const ListNodesResponseItem = zod.object({
   nickname: zod.string(),
   wallet: zod.string(),
   modelName: zod.string().nullable(),
+  modelNumber: zod.string().nullable(),
   internetSpeed: zod.string(),
   vram: zod.string(),
+  ram: zod.string().nullable(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
   online: zod.boolean(),
@@ -44,8 +46,10 @@ export const CreateNodeBody = zod.object({
   nickname: zod.string(),
   wallet: zod.string(),
   modelName: zod.string().nullish(),
+  modelNumber: zod.string().nullish(),
   internetSpeed: zod.string(),
   vram: zod.string(),
+  ram: zod.string().nullish(),
 });
 
 export const CreateNodeResponse = zod.object({
@@ -54,8 +58,10 @@ export const CreateNodeResponse = zod.object({
   nickname: zod.string(),
   wallet: zod.string(),
   modelName: zod.string().nullable(),
+  modelNumber: zod.string().nullable(),
   internetSpeed: zod.string(),
   vram: zod.string(),
+  ram: zod.string().nullable(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
@@ -71,8 +77,10 @@ export const UpdateNodeBody = zod.object({
   nickname: zod.string().optional(),
   wallet: zod.string().optional(),
   modelName: zod.string().nullish(),
+  modelNumber: zod.string().nullish(),
   internetSpeed: zod.string().optional(),
   vram: zod.string().optional(),
+  ram: zod.string().nullish(),
 });
 
 export const UpdateNodeResponse = zod.object({
@@ -81,8 +89,10 @@ export const UpdateNodeResponse = zod.object({
   nickname: zod.string(),
   wallet: zod.string(),
   modelName: zod.string().nullable(),
+  modelNumber: zod.string().nullable(),
   internetSpeed: zod.string(),
   vram: zod.string(),
+  ram: zod.string().nullable(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
@@ -111,8 +121,10 @@ export const GetSessionNodesResponseItem = zod.object({
   nickname: zod.string(),
   wallet: zod.string(),
   modelName: zod.string().nullable(),
+  modelNumber: zod.string().nullable(),
   internetSpeed: zod.string(),
   vram: zod.string(),
+  ram: zod.string().nullable(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
   online: zod.boolean(),

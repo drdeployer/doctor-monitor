@@ -6,6 +6,12 @@ interface NodeCardProps {
   onSelect?: (node: NodeWithStats) => void;
 }
 
+function formatGB(raw: string | null | undefined): string {
+  if (!raw) return "—";
+  const digits = String(raw).match(/[\d.]+/);
+  return digits ? `${digits[0]} GB` : String(raw);
+}
+
 export function NodeCard({ node, onSelect }: NodeCardProps) {
   const maskedWallet = `${node.wallet.slice(0, 6)}...${node.wallet.slice(-4)}`;
   const formattedTime = node.lastRewardTimestamp 
@@ -46,12 +52,20 @@ export function NodeCard({ node, onSelect }: NodeCardProps) {
 
       <div className="grid grid-cols-2 gap-y-3 gap-x-4 py-3 border-y border-[#222]">
         <div className="flex flex-col">
-          <span className="text-[10px] text-[#666]">MODEL</span>
+          <span className="text-[10px] text-[#666]">HARDWARE</span>
           <span className="text-sm">{node.modelName || "—"}</span>
         </div>
         <div className="flex flex-col">
+          <span className="text-[10px] text-[#666]">MODEL</span>
+          <span className="text-sm truncate" title={node.modelNumber ?? undefined}>{node.modelNumber || "—"}</span>
+        </div>
+        <div className="flex flex-col">
           <span className="text-[10px] text-[#666]">VRAM</span>
-          <span className="text-sm">{node.vram}</span>
+          <span className="text-sm">{formatGB(node.vram)}</span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-[10px] text-[#666]">RAM</span>
+          <span className="text-sm">{formatGB(node.ram)}</span>
         </div>
         <div className="flex flex-col">
           <span className="text-[10px] text-[#666]">UPLINK</span>

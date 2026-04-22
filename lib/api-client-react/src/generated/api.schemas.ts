@@ -20,8 +20,12 @@ export interface Node {
   wallet: string;
   /** @nullable */
   modelName: string | null;
+  /** @nullable */
+  modelNumber: string | null;
   internetSpeed: string;
   vram: string;
+  /** @nullable */
+  ram: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -33,8 +37,12 @@ export interface NodeWithStats {
   wallet: string;
   /** @nullable */
   modelName: string | null;
+  /** @nullable */
+  modelNumber: string | null;
   internetSpeed: string;
   vram: string;
+  /** @nullable */
+  ram: string | null;
   createdAt: string;
   updatedAt: string;
   online: boolean;
@@ -54,8 +62,12 @@ export interface NodeCreate {
   wallet: string;
   /** @nullable */
   modelName?: string | null;
+  /** @nullable */
+  modelNumber?: string | null;
   internetSpeed: string;
   vram: string;
+  /** @nullable */
+  ram?: string | null;
 }
 
 export interface NodeUpdate {
@@ -63,8 +75,12 @@ export interface NodeUpdate {
   wallet?: string;
   /** @nullable */
   modelName?: string | null;
+  /** @nullable */
+  modelNumber?: string | null;
   internetSpeed?: string;
   vram?: string;
+  /** @nullable */
+  ram?: string | null;
 }
 
 export interface RewardTx {
