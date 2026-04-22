@@ -93,6 +93,21 @@ export function Dashboard() {
     }
   });
 
+  const [speedValue, setSpeedValue] = useState<string>("");
+  const [speedUnit, setSpeedUnit] = useState<"Gbps" | "Mbps">("Gbps");
+
+  const parseSpeed = (raw: string): { value: string; unit: "Gbps" | "Mbps" } => {
+    const m = raw.match(/^\s*([\d.]+)\s*(Gbps|Mbps)\s*$/i);
+    if (m && m[1] && m[2]) {
+      return { value: m[1], unit: (m[2].toLowerCase() === "mbps" ? "Mbps" : "Gbps") };
+    }
+    return { value: raw, unit: "Gbps" };
+  };
+
+  const syncSpeed = (value: string, unit: "Gbps" | "Mbps") => {
+    form.setValue("internetSpeed", value ? `${value} ${unit}` : "", { shouldValidate: true });
+  };
+
   const onSubmit = async (data: NodeFormValues) => {
     try {
       if (editingNodeId) {
@@ -114,6 +129,8 @@ export function Dashboard() {
       
       setEditingNodeId(null);
       form.reset({ nickname: "", wallet: "", modelName: "", internetSpeed: "", vram: "" });
+      setSpeedValue("");
+      setSpeedUnit("Gbps");
     } catch (error) {
       toast({ 
         title: "SYSTEM ERROR", 
@@ -125,6 +142,7 @@ export function Dashboard() {
 
   const handleEdit = (node: NodeWithStats) => {
     setEditingNodeId(node.id);
+    const parsed = parseSpeed(node.internetSpeed);
     form.reset({
       nickname: node.nickname,
       wallet: node.wallet,
@@ -132,6 +150,8 @@ export function Dashboard() {
       internetSpeed: node.internetSpeed,
       vram: node.vram,
     });
+    setSpeedValue(parsed.value);
+    setSpeedUnit(parsed.unit);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -212,12 +232,50 @@ export function Dashboard() {
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="internetSpeed" className="text-xs text-[#888]">UPLINK_SPEED</Label>
-              <Input 
-                id="internetSpeed" 
-                {...form.register("internetSpeed")} 
-                className="bg-black border-[#444] rounded-none focus-visible:ring-0 focus-visible:border-white text-white font-mono"
-                placeholder="e.g. 1 Gbps"
-              />
+              <div className="flex">
+                <Input
+                  id="internetSpeed"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.1"
+                  value={speedValue}
+                  onChange={(e) => {
+                    setSpeedValue(e.target.value);
+                    syncSpeed(e.target.value, speedUnit);
+                  }}
+                  className="bg-black border-[#444] rounded-none focus-visible:ring-0 focus-visible:border-white text-white font-mono flex-1 border-r-0"
+                  placeholder="e.g. 1"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = speedUnit === "Gbps" ? "Mbps" : "Gbps";
+                    setSpeedUnit(next);
+                    syncSpeed(speedValue, next);
+                  }}
+                  className={`px-3 text-xs font-mono uppercase tracking-wider border border-[#444] hover:border-white hover:text-white transition-colors ${
+                    speedUnit === "Gbps" ? "bg-white text-black border-white" : "bg-black text-[#888]"
+                  }`}
+                  aria-label="Toggle Gbps"
+                >
+                  Gbps
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = speedUnit === "Mbps" ? "Gbps" : "Mbps";
+                    setSpeedUnit(next);
+                    syncSpeed(speedValue, next);
+                  }}
+                  className={`px-3 text-xs font-mono uppercase tracking-wider border border-l-0 border-[#444] hover:border-white hover:text-white transition-colors ${
+                    speedUnit === "Mbps" ? "bg-white text-black border-white" : "bg-black text-[#888]"
+                  }`}
+                  aria-label="Toggle Mbps"
+                >
+                  Mbps
+                </button>
+              </div>
               {form.formState.errors.internetSpeed && <span className="text-xs text-red-500">{form.formState.errors.internetSpeed.message}</span>}
             </div>
 
@@ -236,6 +294,8 @@ export function Dashboard() {
                   onClick={() => {
                     setEditingNodeId(null);
                     form.reset({ nickname: "", wallet: "", modelName: "", internetSpeed: "", vram: "" });
+                    setSpeedValue("");
+                    setSpeedUnit("Gbps");
                   }}
                   className="bg-black text-white border-[#444] hover:bg-[#111] hover:text-white rounded-none uppercase"
                 >
