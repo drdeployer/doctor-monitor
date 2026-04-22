@@ -144,16 +144,21 @@
   z-index: 50;
 }
 
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; box-shadow: 0 0 8px 2px rgba(255,255,255,0.8); }
-  50% { opacity: 0.5; box-shadow: 0 0 2px 0px rgba(255,255,255,0.2); }
+@keyframes pulse-dot-online {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px 2px rgba(0,255,136,0.8); }
+  50% { opacity: 0.6; box-shadow: 0 0 2px 0px rgba(0,255,136,0.2); }
+}
+@keyframes pulse-dot-offline {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px 1px rgba(255,64,64,0.6); }
+  50% { opacity: 0.6; box-shadow: 0 0 2px 0px rgba(255,64,64,0.2); }
 }
 .status-dot.online {
-  background: white;
-  animation: pulse-dot 2s infinite;
+  background: #00ff88;
+  animation: pulse-dot-online 2s infinite;
 }
 .status-dot.offline {
-  background: #333;
+  background: #ff3344;
+  animation: pulse-dot-offline 3s infinite;
 }
 
 @keyframes glitch {

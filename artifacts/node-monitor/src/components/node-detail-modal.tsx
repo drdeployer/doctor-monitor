@@ -76,9 +76,7 @@ export function NodeDetailModal({ node, onClose }: Props) {
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-3">
               <div
-                className={`w-2 h-2 rounded-full ${
-                  node.online ? "bg-white animate-pulse" : "bg-[#333]"
-                }`}
+                className={`status-dot w-2 h-2 rounded-full ${node.online ? "online" : "offline"}`}
               />
               <h2 className="text-lg font-bold uppercase tracking-widest">
                 {node.nickname}

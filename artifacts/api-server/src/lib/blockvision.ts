@@ -145,7 +145,7 @@ export function summarizeRewards(rewards: RewardTx[]): {
   );
   const dailyAccumulated = todays.reduce((sum, r) => sum + r.amount, 0);
   const lastTs = new Date(last.timestamp).getTime();
-  const online = now.getTime() - lastTs < 30 * 60 * 1000; // online if reward in last 30 min
+  const online = now.getTime() - lastTs < 90 * 60 * 1000; // online if reward in last 90 min
 
   return {
     lastRewardAmount: last.amount,

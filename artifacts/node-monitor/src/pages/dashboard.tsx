@@ -26,7 +26,7 @@ const nodeSchema = z.object({
   nickname: z.string().min(1, "Nickname is required").max(50),
   wallet: z.string().regex(/^0x[0-9a-fA-F]{40}$/, "Must be a valid 42-character hex wallet address starting with 0x"),
   modelName: z.string().max(100).optional().or(z.literal("")),
-  modelNumber: z.string().max(100).optional().or(z.literal("")),
+  modelNumber: z.string().min(1, "Model name is required").max(200),
   internetSpeed: z.string().min(1, "Internet speed is required"),
   vram: z.string().regex(/^\d+(\.\d+)?$/, "VRAM must be a number"),
   ram: z.string().optional().refine((v) => !v || /^\d+(\.\d+)?$/.test(v), "RAM must be a number"),
@@ -83,6 +83,7 @@ export function Dashboard() {
 
   const [editingNodeId, setEditingNodeId] = useState<number | null>(null);
   const [expandedNodeId, setExpandedNodeId] = useState<number | null>(null);
+  const [walletVisible, setWalletVisible] = useState<boolean>(false);
 
   const form = useForm<NodeFormValues>({
     resolver: zodResolver(nodeSchema),
@@ -232,12 +233,12 @@ export function Dashboard() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="modelNumber" className="text-xs text-[#888]">MODEL_NAME / MODEL_NUMBER <span className="text-[#555]">(OPTIONAL)</span></Label>
+              <Label htmlFor="modelNumber" className="text-xs text-[#888]">MODEL_NAME</Label>
               <Input
                 id="modelNumber"
                 {...form.register("modelNumber")}
                 className="bg-black border-[#444] rounded-none focus-visible:ring-0 focus-visible:border-white text-white font-mono"
-                placeholder="e.g. ASUS TUF GAMING / 90YV0FT0-M0NA00"
+                placeholder="e.g. Rust Programming / Strand-Rust-Coder-14B-v1 Q4"
               />
               {form.formState.errors.modelNumber && <span className="text-xs text-red-500">{form.formState.errors.modelNumber.message}</span>}
             </div>
@@ -357,9 +358,24 @@ export function Dashboard() {
 
       {/* Main Content - Node List */}
       <div className="w-full md:w-2/3 flex flex-col gap-6">
-        <h2 className="text-xl font-bold tracking-widest uppercase border-b border-[#333] pb-2">
-          OPERATOR_NODES // SESSION: {sessionId.split('-')[0]}
-        </h2>
+        <div className="flex justify-between items-center border-b border-[#333] pb-2 gap-4 flex-wrap">
+          <h2 className="text-xl font-bold tracking-widest uppercase">
+            OPERATOR_NODES // SESSION: {sessionId.split('-')[0]}
+          </h2>
+          <button
+            type="button"
+            onClick={() => setWalletVisible((v) => !v)}
+            className={`text-[10px] font-mono uppercase tracking-widest border px-3 py-1 transition-colors ${
+              walletVisible
+                ? "bg-white text-black border-white"
+                : "bg-black text-[#888] border-[#444] hover:border-white hover:text-white"
+            }`}
+            aria-pressed={walletVisible}
+            title="Toggle wallet visibility"
+          >
+            WALLET: {walletVisible ? "VISIBLE" : "HIDDEN"}
+          </button>
+        </div>
 
         {isLoading ? (
           <div className="flex flex-col gap-4">
@@ -373,7 +389,7 @@ export function Dashboard() {
               <div key={node.id} className="border border-[#333] p-5 bg-black hover:border-[#666] transition-colors">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 ${node.online ? 'bg-white animate-pulse' : 'bg-[#333]'}`} />
+                    <div className={`status-dot w-2 h-2 rounded-full ${node.online ? 'online' : 'offline'}`} />
                     <h3 className="text-lg font-bold uppercase tracking-wider">{node.nickname}</h3>
                   </div>
                   <div className="flex gap-2">
@@ -395,7 +411,11 @@ export function Dashboard() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
                   <div className="flex flex-col">
                     <span className="text-[#666]">WALLET</span>
-                    <span className="text-white">{node.wallet.slice(0, 6)}...{node.wallet.slice(-4)}</span>
+                    <span className="text-white font-mono break-all">
+                      {walletVisible
+                        ? node.wallet
+                        : "•".repeat(10) + " HIDDEN"}
+                    </span>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[#666]">HARDWARE</span>
