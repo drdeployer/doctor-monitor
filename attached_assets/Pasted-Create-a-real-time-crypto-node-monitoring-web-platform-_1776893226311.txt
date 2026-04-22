@@ -1,0 +1,83 @@
+Create a real-time crypto node monitoring web platform with a black background and white typography.
+
+STYLE:
+- pure black background (#000000)
+- white text (#ffffff)
+- thin borders
+- monospace font
+- cyberpunk terminal aesthetic
+- subtle animated network connection lines between active nodes
+- glowing white accents
+- minimalistic high-tech interface
+- responsive design for desktop first
+
+SITE STRUCTURE:
+
+PAGE 1 — LIVE NODE NETWORK
+Display all active user nodes as animated grid cards.
+Each node card must show:
+
+Nickname
+Wallet: xxxx-xxxx masked format
+Model name
+Internet speed
+VRAM amount
+Token Amount per round
+Daily Accumulated (UTC day total)
+Scan Explorer: clickable Tx Hash / Tx ID
+UTC Timestamp of latest token reward
+Live status indicator (online/offline)
+
+REQUIREMENTS:
+- fetch live blockchain data from Monad Vision / BlockVision explorer API
+- automatically parse incoming reward transactions
+- count only reward transactions where:
+  amount > 1
+  amount != 1000
+- ignore invalid transfers
+- calculate:
+  Token Amount = current reward
+  Daily Accumulated = sum of today's valid rewards in UTC only
+- auto refresh every 15 seconds
+- cards update in real time without page reload
+- animated searching/scanning effect
+- hover effect enlarges node card slightly
+
+PAGE 2 — USER DASHBOARD
+Accessible by "Dashboard" button.
+User can create or edit their node information.
+
+Fields:
+Nickname
+Wallet address
+Model name / GPU model
+Internet speed
+VRAM amount
+
+FUNCTIONALITY:
+- save user node locally in database
+- after save, node appears instantly on main page
+- user can edit information anytime
+- validate wallet address format
+- personal dashboard without login
+- identify dashboard session via unique browser session ID
+
+EXPLORER INTEGRATION:
+Use Monad / BlockVision API to:
+- fetch wallet transactions
+- detect token rewards
+- extract tx hash
+- extract UTC timestamp
+- calculate daily rewards
+
+INTERFACE DETAILS:
+Top navigation:
+- Live Nodes
+- Dashboard
+
+Additional:
+- UTC clock in header
+- animated scanning status text
+- network line animation between node cards
+- smooth transitions
+- premium terminal feel

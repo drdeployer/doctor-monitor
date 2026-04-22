@@ -8,3 +8,70 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface DeleteResponse {
+  success: boolean;
+}
+
+export interface Node {
+  id: number;
+  sessionId: string;
+  nickname: string;
+  wallet: string;
+  modelName: string;
+  internetSpeed: string;
+  vram: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NodeWithStats {
+  id: number;
+  sessionId: string;
+  nickname: string;
+  wallet: string;
+  modelName: string;
+  internetSpeed: string;
+  vram: string;
+  createdAt: string;
+  updatedAt: string;
+  online: boolean;
+  /** @nullable */
+  lastRewardAmount: number | null;
+  /** @nullable */
+  lastRewardTxHash: string | null;
+  /** @nullable */
+  lastRewardTimestamp: string | null;
+  dailyAccumulated: number;
+  rewardCountToday: number;
+}
+
+export interface NodeCreate {
+  sessionId: string;
+  nickname: string;
+  wallet: string;
+  modelName: string;
+  internetSpeed: string;
+  vram: string;
+}
+
+export interface NodeUpdate {
+  nickname?: string;
+  wallet?: string;
+  modelName?: string;
+  internetSpeed?: string;
+  vram?: string;
+}
+
+export interface RewardTx {
+  txHash: string;
+  amount: number;
+  timestamp: string;
+}
+
+export interface NetworkSummary {
+  totalNodes: number;
+  onlineNodes: number;
+  totalDailyRewards: number;
+  totalRewardCountToday: number;
+}

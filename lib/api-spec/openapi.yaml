@@ -10,13 +10,14 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: nodes
+    description: Crypto node monitoring operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +25,130 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /nodes:
+    get:
+      operationId: listNodes
+      tags: [nodes]
+      summary: List all live nodes with reward stats
+      responses:
+        "200":
+          description: List of nodes with stats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NodeWithStats"
+    post:
+      operationId: createNode
+      tags: [nodes]
+      summary: Create a node
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodeCreate"
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Node"
+  /nodes/{id}:
+    patch:
+      operationId: updateNode
+      tags: [nodes]
+      summary: Update a node
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodeUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Node"
+    delete:
+      operationId: deleteNode
+      tags: [nodes]
+      summary: Delete a node
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResponse"
+  /nodes/session/{sessionId}:
+    get:
+      operationId: getSessionNodes
+      tags: [nodes]
+      summary: Get nodes belonging to a browser session
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session nodes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NodeWithStats"
+  /nodes/{id}/transactions:
+    get:
+      operationId: getNodeTransactions
+      tags: [nodes]
+      summary: Recent reward transactions for a node
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Recent reward transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RewardTx"
+  /network/summary:
+    get:
+      operationId: getNetworkSummary
+      tags: [nodes]
+      summary: Aggregate network stats
+      responses:
+        "200":
+          description: Network summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NetworkSummary"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +158,154 @@ components:
           type: string
       required:
         - status
-
+    DeleteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required:
+        - success
+    Node:
+      type: object
+      properties:
+        id:
+          type: integer
+        sessionId:
+          type: string
+        nickname:
+          type: string
+        wallet:
+          type: string
+        modelName:
+          type: string
+        internetSpeed:
+          type: string
+        vram:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - sessionId
+        - nickname
+        - wallet
+        - modelName
+        - internetSpeed
+        - vram
+        - createdAt
+        - updatedAt
+    NodeWithStats:
+      type: object
+      properties:
+        id:
+          type: integer
+        sessionId:
+          type: string
+        nickname:
+          type: string
+        wallet:
+          type: string
+        modelName:
+          type: string
+        internetSpeed:
+          type: string
+        vram:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        online:
+          type: boolean
+        lastRewardAmount:
+          type: ["number", "null"]
+        lastRewardTxHash:
+          type: ["string", "null"]
+        lastRewardTimestamp:
+          type: ["string", "null"]
+        dailyAccumulated:
+          type: number
+        rewardCountToday:
+          type: integer
+      required:
+        - id
+        - sessionId
+        - nickname
+        - wallet
+        - modelName
+        - internetSpeed
+        - vram
+        - createdAt
+        - updatedAt
+        - online
+        - lastRewardAmount
+        - lastRewardTxHash
+        - lastRewardTimestamp
+        - dailyAccumulated
+        - rewardCountToday
+    NodeCreate:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        nickname:
+          type: string
+        wallet:
+          type: string
+        modelName:
+          type: string
+        internetSpeed:
+          type: string
+        vram:
+          type: string
+      required:
+        - sessionId
+        - nickname
+        - wallet
+        - modelName
+        - internetSpeed
+        - vram
+    NodeUpdate:
+      type: object
+      properties:
+        nickname:
+          type: string
+        wallet:
+          type: string
+        modelName:
+          type: string
+        internetSpeed:
+          type: string
+        vram:
+          type: string
+    RewardTx:
+      type: object
+      properties:
+        txHash:
+          type: string
+        amount:
+          type: number
+        timestamp:
+          type: string
+      required:
+        - txHash
+        - amount
+        - timestamp
+    NetworkSummary:
+      type: object
+      properties:
+        totalNodes:
+          type: integer
+        onlineNodes:
+          type: integer
+        totalDailyRewards:
+          type: number
+        totalRewardCountToday:
+          type: integer
+      required:
+        - totalNodes
+        - onlineNodes
+        - totalDailyRewards
+        - totalRewardCountToday

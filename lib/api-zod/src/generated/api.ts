@@ -8,9 +8,144 @@
 import * as zod from "zod";
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
+});
+
+/**
+ * @summary List all live nodes with reward stats
+ */
+export const ListNodesResponseItem = zod.object({
+  id: zod.number(),
+  sessionId: zod.string(),
+  nickname: zod.string(),
+  wallet: zod.string(),
+  modelName: zod.string(),
+  internetSpeed: zod.string(),
+  vram: zod.string(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+  online: zod.boolean(),
+  lastRewardAmount: zod.number().nullable(),
+  lastRewardTxHash: zod.string().nullable(),
+  lastRewardTimestamp: zod.string().nullable(),
+  dailyAccumulated: zod.number(),
+  rewardCountToday: zod.number(),
+});
+export const ListNodesResponse = zod.array(ListNodesResponseItem);
+
+/**
+ * @summary Create a node
+ */
+export const CreateNodeBody = zod.object({
+  sessionId: zod.string(),
+  nickname: zod.string(),
+  wallet: zod.string(),
+  modelName: zod.string(),
+  internetSpeed: zod.string(),
+  vram: zod.string(),
+});
+
+export const CreateNodeResponse = zod.object({
+  id: zod.number(),
+  sessionId: zod.string(),
+  nickname: zod.string(),
+  wallet: zod.string(),
+  modelName: zod.string(),
+  internetSpeed: zod.string(),
+  vram: zod.string(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Update a node
+ */
+export const UpdateNodeParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateNodeBody = zod.object({
+  nickname: zod.string().optional(),
+  wallet: zod.string().optional(),
+  modelName: zod.string().optional(),
+  internetSpeed: zod.string().optional(),
+  vram: zod.string().optional(),
+});
+
+export const UpdateNodeResponse = zod.object({
+  id: zod.number(),
+  sessionId: zod.string(),
+  nickname: zod.string(),
+  wallet: zod.string(),
+  modelName: zod.string(),
+  internetSpeed: zod.string(),
+  vram: zod.string(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Delete a node
+ */
+export const DeleteNodeParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeleteNodeResponse = zod.object({
+  success: zod.boolean(),
+});
+
+/**
+ * @summary Get nodes belonging to a browser session
+ */
+export const GetSessionNodesParams = zod.object({
+  sessionId: zod.coerce.string(),
+});
+
+export const GetSessionNodesResponseItem = zod.object({
+  id: zod.number(),
+  sessionId: zod.string(),
+  nickname: zod.string(),
+  wallet: zod.string(),
+  modelName: zod.string(),
+  internetSpeed: zod.string(),
+  vram: zod.string(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+  online: zod.boolean(),
+  lastRewardAmount: zod.number().nullable(),
+  lastRewardTxHash: zod.string().nullable(),
+  lastRewardTimestamp: zod.string().nullable(),
+  dailyAccumulated: zod.number(),
+  rewardCountToday: zod.number(),
+});
+export const GetSessionNodesResponse = zod.array(GetSessionNodesResponseItem);
+
+/**
+ * @summary Recent reward transactions for a node
+ */
+export const GetNodeTransactionsParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetNodeTransactionsResponseItem = zod.object({
+  txHash: zod.string(),
+  amount: zod.number(),
+  timestamp: zod.string(),
+});
+export const GetNodeTransactionsResponse = zod.array(
+  GetNodeTransactionsResponseItem,
+);
+
+/**
+ * @summary Aggregate network stats
+ */
+export const GetNetworkSummaryResponse = zod.object({
+  totalNodes: zod.number(),
+  onlineNodes: zod.number(),
+  totalDailyRewards: zod.number(),
+  totalRewardCountToday: zod.number(),
 });

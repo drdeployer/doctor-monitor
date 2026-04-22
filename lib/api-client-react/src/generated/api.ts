@@ -5,18 +5,30 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HealthStatus } from "./api.schemas";
+import type {
+  DeleteResponse,
+  HealthStatus,
+  NetworkSummary,
+  Node,
+  NodeCreate,
+  NodeUpdate,
+  NodeWithStats,
+  RewardTx,
+} from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
-import type { ErrorType } from "../custom-fetch";
+import type { ErrorType, BodyType } from "../custom-fetch";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -25,7 +37,6 @@ type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const getHealthCheckUrl = () => {
@@ -92,6 +103,580 @@ export function useHealthCheck<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getHealthCheckQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List all live nodes with reward stats
+ */
+export const getListNodesUrl = () => {
+  return `/api/nodes`;
+};
+
+export const listNodes = async (
+  options?: RequestInit,
+): Promise<NodeWithStats[]> => {
+  return customFetch<NodeWithStats[]>(getListNodesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListNodesQueryKey = () => {
+  return [`/api/nodes`] as const;
+};
+
+export const getListNodesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listNodes>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof listNodes>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListNodesQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listNodes>>> = ({
+    signal,
+  }) => listNodes({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listNodes>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListNodesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listNodes>>
+>;
+export type ListNodesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all live nodes with reward stats
+ */
+
+export function useListNodes<
+  TData = Awaited<ReturnType<typeof listNodes>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof listNodes>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListNodesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a node
+ */
+export const getCreateNodeUrl = () => {
+  return `/api/nodes`;
+};
+
+export const createNode = async (
+  nodeCreate: NodeCreate,
+  options?: RequestInit,
+): Promise<Node> => {
+  return customFetch<Node>(getCreateNodeUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(nodeCreate),
+  });
+};
+
+export const getCreateNodeMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createNode>>,
+    TError,
+    { data: BodyType<NodeCreate> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createNode>>,
+  TError,
+  { data: BodyType<NodeCreate> },
+  TContext
+> => {
+  const mutationKey = ["createNode"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createNode>>,
+    { data: BodyType<NodeCreate> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createNode(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateNodeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createNode>>
+>;
+export type CreateNodeMutationBody = BodyType<NodeCreate>;
+export type CreateNodeMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a node
+ */
+export const useCreateNode = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createNode>>,
+    TError,
+    { data: BodyType<NodeCreate> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createNode>>,
+  TError,
+  { data: BodyType<NodeCreate> },
+  TContext
+> => {
+  return useMutation(getCreateNodeMutationOptions(options));
+};
+
+/**
+ * @summary Update a node
+ */
+export const getUpdateNodeUrl = (id: number) => {
+  return `/api/nodes/${id}`;
+};
+
+export const updateNode = async (
+  id: number,
+  nodeUpdate: NodeUpdate,
+  options?: RequestInit,
+): Promise<Node> => {
+  return customFetch<Node>(getUpdateNodeUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(nodeUpdate),
+  });
+};
+
+export const getUpdateNodeMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateNode>>,
+    TError,
+    { id: number; data: BodyType<NodeUpdate> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateNode>>,
+  TError,
+  { id: number; data: BodyType<NodeUpdate> },
+  TContext
+> => {
+  const mutationKey = ["updateNode"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateNode>>,
+    { id: number; data: BodyType<NodeUpdate> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateNode(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateNodeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateNode>>
+>;
+export type UpdateNodeMutationBody = BodyType<NodeUpdate>;
+export type UpdateNodeMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update a node
+ */
+export const useUpdateNode = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateNode>>,
+    TError,
+    { id: number; data: BodyType<NodeUpdate> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateNode>>,
+  TError,
+  { id: number; data: BodyType<NodeUpdate> },
+  TContext
+> => {
+  return useMutation(getUpdateNodeMutationOptions(options));
+};
+
+/**
+ * @summary Delete a node
+ */
+export const getDeleteNodeUrl = (id: number) => {
+  return `/api/nodes/${id}`;
+};
+
+export const deleteNode = async (
+  id: number,
+  options?: RequestInit,
+): Promise<DeleteResponse> => {
+  return customFetch<DeleteResponse>(getDeleteNodeUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteNodeMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteNode>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteNode>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteNode"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteNode>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteNode(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteNodeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteNode>>
+>;
+
+export type DeleteNodeMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a node
+ */
+export const useDeleteNode = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteNode>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteNode>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteNodeMutationOptions(options));
+};
+
+/**
+ * @summary Get nodes belonging to a browser session
+ */
+export const getGetSessionNodesUrl = (sessionId: string) => {
+  return `/api/nodes/session/${sessionId}`;
+};
+
+export const getSessionNodes = async (
+  sessionId: string,
+  options?: RequestInit,
+): Promise<NodeWithStats[]> => {
+  return customFetch<NodeWithStats[]>(getGetSessionNodesUrl(sessionId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSessionNodesQueryKey = (sessionId: string) => {
+  return [`/api/nodes/session/${sessionId}`] as const;
+};
+
+export const getGetSessionNodesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSessionNodes>>,
+  TError = ErrorType<unknown>,
+>(
+  sessionId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSessionNodes>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetSessionNodesQueryKey(sessionId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSessionNodes>>> = ({
+    signal,
+  }) => getSessionNodes(sessionId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!sessionId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSessionNodes>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetSessionNodesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSessionNodes>>
+>;
+export type GetSessionNodesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get nodes belonging to a browser session
+ */
+
+export function useGetSessionNodes<
+  TData = Awaited<ReturnType<typeof getSessionNodes>>,
+  TError = ErrorType<unknown>,
+>(
+  sessionId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSessionNodes>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetSessionNodesQueryOptions(sessionId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Recent reward transactions for a node
+ */
+export const getGetNodeTransactionsUrl = (id: number) => {
+  return `/api/nodes/${id}/transactions`;
+};
+
+export const getNodeTransactions = async (
+  id: number,
+  options?: RequestInit,
+): Promise<RewardTx[]> => {
+  return customFetch<RewardTx[]>(getGetNodeTransactionsUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetNodeTransactionsQueryKey = (id: number) => {
+  return [`/api/nodes/${id}/transactions`] as const;
+};
+
+export const getGetNodeTransactionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getNodeTransactions>>,
+  TError = ErrorType<unknown>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getNodeTransactions>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetNodeTransactionsQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getNodeTransactions>>
+  > = ({ signal }) => getNodeTransactions(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getNodeTransactions>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetNodeTransactionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getNodeTransactions>>
+>;
+export type GetNodeTransactionsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Recent reward transactions for a node
+ */
+
+export function useGetNodeTransactions<
+  TData = Awaited<ReturnType<typeof getNodeTransactions>>,
+  TError = ErrorType<unknown>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getNodeTransactions>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetNodeTransactionsQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Aggregate network stats
+ */
+export const getGetNetworkSummaryUrl = () => {
+  return `/api/network/summary`;
+};
+
+export const getNetworkSummary = async (
+  options?: RequestInit,
+): Promise<NetworkSummary> => {
+  return customFetch<NetworkSummary>(getGetNetworkSummaryUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetNetworkSummaryQueryKey = () => {
+  return [`/api/network/summary`] as const;
+};
+
+export const getGetNetworkSummaryQueryOptions = <
+  TData = Awaited<ReturnType<typeof getNetworkSummary>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getNetworkSummary>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetNetworkSummaryQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getNetworkSummary>>
+  > = ({ signal }) => getNetworkSummary({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getNetworkSummary>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetNetworkSummaryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getNetworkSummary>>
+>;
+export type GetNetworkSummaryQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Aggregate network stats
+ */
+
+export function useGetNetworkSummary<
+  TData = Awaited<ReturnType<typeof getNetworkSummary>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getNetworkSummary>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetNetworkSummaryQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

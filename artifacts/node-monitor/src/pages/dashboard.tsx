@@ -1,0 +1,331 @@
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useQueryClient } from "@tanstack/react-query";
+import { 
+  useGetSessionNodes, 
+  useCreateNode, 
+  useUpdateNode, 
+  useDeleteNode,
+  useGetNodeTransactions,
+  getGetSessionNodesQueryKey,
+  getListNodesQueryKey,
+  getGetNetworkSummaryQueryKey,
+  type NodeWithStats
+} from "@workspace/api-client-react";
+import { getSessionId } from "@/lib/session";
+import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { format } from "date-fns";
+
+const nodeSchema = z.object({
+  nickname: z.string().min(1, "Nickname is required").max(50),
+  wallet: z.string().regex(/^0x[0-9a-fA-F]{40}$/, "Must be a valid 42-character hex wallet address starting with 0x"),
+  modelName: z.string().min(1, "Model name is required").max(100),
+  internetSpeed: z.string().min(1, "Internet speed is required"),
+  vram: z.string().min(1, "VRAM amount is required"),
+});
+
+type NodeFormValues = z.infer<typeof nodeSchema>;
+
+function NodeTransactions({ nodeId }: { nodeId: number }) {
+  const { data: transactions, isLoading } = useGetNodeTransactions(nodeId);
+
+  if (isLoading) {
+    return <div className="text-xs text-[#666] py-2">FETCHING TX DATA...</div>;
+  }
+
+  if (!transactions || transactions.length === 0) {
+    return <div className="text-xs text-[#666] py-2">NO RECENT TRANSACTIONS FOUND</div>;
+  }
+
+  return (
+    <div className="mt-4 border-t border-[#222] pt-4">
+      <h4 className="text-xs text-[#888] mb-2 uppercase tracking-widest">Recent Transactions</h4>
+      <div className="flex flex-col gap-2 max-h-40 overflow-y-auto pr-2">
+        {transactions.map((tx) => (
+          <div key={tx.txHash} className="flex justify-between items-center text-xs border border-[#222] p-2 hover:border-[#444] transition-colors">
+            <div className="flex flex-col">
+              <span className="text-white">{tx.amount.toFixed(4)}</span>
+              <span className="text-[#666]">{format(new Date(tx.timestamp), "yyyy-MM-dd HH:mm:ss")}</span>
+            </div>
+            <a 
+              href={`https://testnet.monadexplorer.com/tx/${tx.txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#888] hover:text-white underline decoration-1 underline-offset-2"
+            >
+              {tx.txHash.slice(0, 10)}...{tx.txHash.slice(-6)}
+            </a>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function Dashboard() {
+  const sessionId = getSessionId();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  const { data: nodes, isLoading } = useGetSessionNodes(sessionId, { query: { refetchInterval: 15000 } });
+  
+  const createNode = useCreateNode();
+  const updateNode = useUpdateNode();
+  const deleteNode = useDeleteNode();
+
+  const [editingNodeId, setEditingNodeId] = useState<number | null>(null);
+  const [expandedNodeId, setExpandedNodeId] = useState<number | null>(null);
+
+  const form = useForm<NodeFormValues>({
+    resolver: zodResolver(nodeSchema),
+    defaultValues: {
+      nickname: "",
+      wallet: "",
+      modelName: "",
+      internetSpeed: "",
+      vram: "",
+    }
+  });
+
+  const onSubmit = async (data: NodeFormValues) => {
+    try {
+      if (editingNodeId) {
+        await updateNode.mutateAsync({
+          id: editingNodeId,
+          data
+        });
+        toast({ title: "SYSTEM UPDATE", description: `NODE [${data.nickname}] UPDATED SUCCESSFULLY` });
+      } else {
+        await createNode.mutateAsync({
+          data: { ...data, sessionId }
+        });
+        toast({ title: "SYSTEM UPDATE", description: `NODE [${data.nickname}] INITIALIZED SUCCESSFULLY` });
+      }
+      
+      queryClient.invalidateQueries({ queryKey: getGetSessionNodesQueryKey(sessionId) });
+      queryClient.invalidateQueries({ queryKey: getListNodesQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetNetworkSummaryQueryKey() });
+      
+      setEditingNodeId(null);
+      form.reset({ nickname: "", wallet: "", modelName: "", internetSpeed: "", vram: "" });
+    } catch (error) {
+      toast({ 
+        title: "SYSTEM ERROR", 
+        description: "FAILED TO PROCESS REQUEST", 
+        variant: "destructive" 
+      });
+    }
+  };
+
+  const handleEdit = (node: NodeWithStats) => {
+    setEditingNodeId(node.id);
+    form.reset({
+      nickname: node.nickname,
+      wallet: node.wallet,
+      modelName: node.modelName,
+      internetSpeed: node.internetSpeed,
+      vram: node.vram,
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDelete = async (id: number, nickname: string) => {
+    if (confirm(`TERMINATE NODE [${nickname}]? THIS ACTION IS IRREVERSIBLE.`)) {
+      try {
+        await deleteNode.mutateAsync({ id });
+        queryClient.invalidateQueries({ queryKey: getGetSessionNodesQueryKey(sessionId) });
+        queryClient.invalidateQueries({ queryKey: getListNodesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetNetworkSummaryQueryKey() });
+        
+        if (editingNodeId === id) {
+          setEditingNodeId(null);
+          form.reset();
+        }
+        
+        toast({ title: "SYSTEM UPDATE", description: `NODE [${nickname}] TERMINATED` });
+      } catch (error) {
+        toast({ title: "SYSTEM ERROR", description: "FAILED TO TERMINATE NODE", variant: "destructive" });
+      }
+    }
+  };
+
+  return (
+    <div className="max-w-5xl mx-auto px-4 py-8 flex flex-col md:flex-row gap-8">
+      {/* Sidebar Form */}
+      <div className="w-full md:w-1/3 flex flex-col gap-6">
+        <div className="border border-[#333] bg-black p-6 relative">
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-50" />
+          <h2 className="text-xl font-bold mb-6 tracking-widest uppercase">
+            {editingNodeId ? "CONFIGURE_NODE" : "REGISTER_NODE"}
+          </h2>
+          
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="nickname" className="text-xs text-[#888]">NICKNAME</Label>
+              <Input 
+                id="nickname" 
+                {...form.register("nickname")} 
+                className="bg-black border-[#444] rounded-none focus-visible:ring-0 focus-visible:border-white text-white font-mono"
+                placeholder="e.g. ALPHA_PRIME"
+              />
+              {form.formState.errors.nickname && <span className="text-xs text-red-500">{form.formState.errors.nickname.message}</span>}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="wallet" className="text-xs text-[#888]">WALLET_ADDRESS</Label>
+              <Input 
+                id="wallet" 
+                {...form.register("wallet")} 
+                className="bg-black border-[#444] rounded-none focus-visible:ring-0 focus-visible:border-white text-white font-mono text-xs"
+                placeholder="0x..."
+              />
+              {form.formState.errors.wallet && <span className="text-xs text-red-500">{form.formState.errors.wallet.message}</span>}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="modelName" className="text-xs text-[#888]">HARDWARE_MODEL</Label>
+              <Input 
+                id="modelName" 
+                {...form.register("modelName")} 
+                className="bg-black border-[#444] rounded-none focus-visible:ring-0 focus-visible:border-white text-white font-mono"
+                placeholder="e.g. RTX 4090"
+              />
+              {form.formState.errors.modelName && <span className="text-xs text-red-500">{form.formState.errors.modelName.message}</span>}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="vram" className="text-xs text-[#888]">VRAM_CAPACITY</Label>
+              <Input 
+                id="vram" 
+                {...form.register("vram")} 
+                className="bg-black border-[#444] rounded-none focus-visible:ring-0 focus-visible:border-white text-white font-mono"
+                placeholder="e.g. 24 GB"
+              />
+              {form.formState.errors.vram && <span className="text-xs text-red-500">{form.formState.errors.vram.message}</span>}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="internetSpeed" className="text-xs text-[#888]">UPLINK_SPEED</Label>
+              <Input 
+                id="internetSpeed" 
+                {...form.register("internetSpeed")} 
+                className="bg-black border-[#444] rounded-none focus-visible:ring-0 focus-visible:border-white text-white font-mono"
+                placeholder="e.g. 1 Gbps"
+              />
+              {form.formState.errors.internetSpeed && <span className="text-xs text-red-500">{form.formState.errors.internetSpeed.message}</span>}
+            </div>
+
+            <div className="flex gap-4 mt-4">
+              <Button 
+                type="submit" 
+                disabled={createNode.isPending || updateNode.isPending}
+                className="flex-1 bg-white text-black hover:bg-[#ccc] rounded-none font-bold uppercase tracking-wider"
+              >
+                {createNode.isPending || updateNode.isPending ? "PROCESSING..." : editingNodeId ? "UPDATE_NODE" : "INITIALIZE"}
+              </Button>
+              {editingNodeId && (
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  onClick={() => {
+                    setEditingNodeId(null);
+                    form.reset({ nickname: "", wallet: "", modelName: "", internetSpeed: "", vram: "" });
+                  }}
+                  className="bg-black text-white border-[#444] hover:bg-[#111] hover:text-white rounded-none uppercase"
+                >
+                  CANCEL
+                </Button>
+              )}
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* Main Content - Node List */}
+      <div className="w-full md:w-2/3 flex flex-col gap-6">
+        <h2 className="text-xl font-bold tracking-widest uppercase border-b border-[#333] pb-2">
+          OPERATOR_NODES // SESSION: {sessionId.split('-')[0]}
+        </h2>
+
+        {isLoading ? (
+          <div className="flex flex-col gap-4">
+            {Array(3).fill(0).map((_, i) => (
+              <Skeleton key={i} className="h-32 w-full bg-[#111] border border-[#333] rounded-none" />
+            ))}
+          </div>
+        ) : nodes && nodes.length > 0 ? (
+          <div className="flex flex-col gap-4">
+            {nodes.map((node) => (
+              <div key={node.id} className="border border-[#333] p-5 bg-black hover:border-[#666] transition-colors">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-2 h-2 ${node.online ? 'bg-white animate-pulse' : 'bg-[#333]'}`} />
+                    <h3 className="text-lg font-bold uppercase tracking-wider">{node.nickname}</h3>
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => handleEdit(node)}
+                      className="text-xs text-[#888] hover:text-white px-2 py-1 border border-[#333] hover:border-white transition-all uppercase"
+                    >
+                      EDIT
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(node.id, node.nickname)}
+                      className="text-xs text-[#888] hover:text-white px-2 py-1 border border-[#333] hover:border-white transition-all uppercase"
+                    >
+                      TERM
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                  <div className="flex flex-col">
+                    <span className="text-[#666]">WALLET</span>
+                    <span className="text-white">{node.wallet.slice(0, 6)}...{node.wallet.slice(-4)}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[#666]">HARDWARE</span>
+                    <span className="text-white">{node.modelName}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[#666]">UPLINK/VRAM</span>
+                    <span className="text-white">{node.internetSpeed} / {node.vram}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[#666]">DAILY_REWARD</span>
+                    <span className="text-white font-bold">{node.dailyAccumulated.toFixed(4)}</span>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-[#222]">
+                  <button 
+                    onClick={() => setExpandedNodeId(expandedNodeId === node.id ? null : node.id)}
+                    className="text-xs text-[#888] hover:text-white uppercase flex items-center gap-2"
+                  >
+                    {expandedNodeId === node.id ? "[-] HIDE_TX_LOG" : "[+] VIEW_TX_LOG"}
+                  </button>
+                  
+                  {expandedNodeId === node.id && (
+                    <NodeTransactions nodeId={node.id} />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="border border-[#333] p-12 text-center text-[#888] uppercase tracking-widest bg-[#050505]">
+            NO_NODES_REGISTERED
+            <br />
+            <span className="text-xs text-[#555] mt-2 block">USE THE CONSOLE TO INITIALIZE A NEW NODE</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
