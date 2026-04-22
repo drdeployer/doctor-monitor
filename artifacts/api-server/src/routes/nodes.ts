@@ -56,7 +56,7 @@ router.post("/nodes", async (req, res) => {
       sessionId: body.sessionId,
       nickname: body.nickname,
       wallet: body.wallet,
-      modelName: body.modelName,
+      modelName: body.modelName ?? null,
       internetSpeed: body.internetSpeed,
       vram: body.vram,
     })
@@ -138,7 +138,7 @@ router.get("/nodes/:id/transactions", async (req, res) => {
     return;
   }
   const rewards = await getRewardsForWallet(node.wallet);
-  res.json(rewards.slice(0, 25));
+  res.json(rewards.slice(0, 200));
 });
 
 router.get("/network/summary", async (_req, res) => {

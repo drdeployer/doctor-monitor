@@ -9,7 +9,8 @@
 export interface NodeUpdate {
   nickname?: string;
   wallet?: string;
-  modelName?: string;
+  /** @nullable */
+  modelName?: string | null;
   internetSpeed?: string;
   vram?: string;
 }

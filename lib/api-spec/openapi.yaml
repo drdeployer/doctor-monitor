@@ -177,7 +177,7 @@ components:
         wallet:
           type: string
         modelName:
-          type: string
+          type: ["string", "null"]
         internetSpeed:
           type: string
         vram:
@@ -208,7 +208,7 @@ components:
         wallet:
           type: string
         modelName:
-          type: string
+          type: ["string", "null"]
         internetSpeed:
           type: string
         vram:
@@ -255,7 +255,7 @@ components:
         wallet:
           type: string
         modelName:
-          type: string
+          type: ["string", "null"]
         internetSpeed:
           type: string
         vram:
@@ -264,7 +264,6 @@ components:
         - sessionId
         - nickname
         - wallet
-        - modelName
         - internetSpeed
         - vram
     NodeUpdate:
@@ -275,7 +274,7 @@ components:
         wallet:
           type: string
         modelName:
-          type: string
+          type: ["string", "null"]
         internetSpeed:
           type: string
         vram:

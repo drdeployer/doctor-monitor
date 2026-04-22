@@ -10,7 +10,8 @@ export interface NodeCreate {
   sessionId: string;
   nickname: string;
   wallet: string;
-  modelName: string;
+  /** @nullable */
+  modelName?: string | null;
   internetSpeed: string;
   vram: string;
 }

@@ -1,6 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { useListNodes, useGetNetworkSummary } from "@workspace/api-client-react";
+import {
+  useListNodes,
+  useGetNetworkSummary,
+  type NodeWithStats,
+} from "@workspace/api-client-react";
 import { NodeCard } from "@/components/node-card";
+import { NodeDetailModal } from "@/components/node-detail-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function AnimatedLines({ nodes }: { nodes: any[] }) {
@@ -73,8 +78,9 @@ function AnimatedLines({ nodes }: { nodes: any[] }) {
 }
 
 export function Home() {
-  const { data: nodes, isLoading: isLoadingNodes } = useListNodes({ query: { refetchInterval: 15000 } });
-  const { data: summary, isLoading: isLoadingSummary } = useGetNetworkSummary({ query: { refetchInterval: 15000 } });
+  const { data: nodes, isLoading: isLoadingNodes } = useListNodes({ query: { refetchInterval: 15000 } as any });
+  const { data: summary, isLoading: isLoadingSummary } = useGetNetworkSummary({ query: { refetchInterval: 15000 } as any });
+  const [selectedNode, setSelectedNode] = useState<NodeWithStats | null>(null);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 relative">
@@ -123,7 +129,7 @@ export function Home() {
             ))
           ) : nodes && nodes.length > 0 ? (
             nodes.map((node) => (
-              <NodeCard key={node.id} node={node} />
+              <NodeCard key={node.id} node={node} onSelect={setSelectedNode} />
             ))
           ) : (
             <div className="col-span-full border border-[#333] p-12 text-center text-[#888]">
@@ -132,6 +138,13 @@ export function Home() {
           )}
         </div>
       </div>
+
+      {selectedNode && (
+        <NodeDetailModal
+          node={selectedNode}
+          onClose={() => setSelectedNode(null)}
+        />
+      )}
     </div>
   );
 }

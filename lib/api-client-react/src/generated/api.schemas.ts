@@ -18,7 +18,8 @@ export interface Node {
   sessionId: string;
   nickname: string;
   wallet: string;
-  modelName: string;
+  /** @nullable */
+  modelName: string | null;
   internetSpeed: string;
   vram: string;
   createdAt: string;
@@ -30,7 +31,8 @@ export interface NodeWithStats {
   sessionId: string;
   nickname: string;
   wallet: string;
-  modelName: string;
+  /** @nullable */
+  modelName: string | null;
   internetSpeed: string;
   vram: string;
   createdAt: string;
@@ -50,7 +52,8 @@ export interface NodeCreate {
   sessionId: string;
   nickname: string;
   wallet: string;
-  modelName: string;
+  /** @nullable */
+  modelName?: string | null;
   internetSpeed: string;
   vram: string;
 }
@@ -58,7 +61,8 @@ export interface NodeCreate {
 export interface NodeUpdate {
   nickname?: string;
   wallet?: string;
-  modelName?: string;
+  /** @nullable */
+  modelName?: string | null;
   internetSpeed?: string;
   vram?: string;
 }

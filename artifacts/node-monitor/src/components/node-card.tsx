@@ -1,12 +1,12 @@
-import { useState } from "react";
 import { format } from "date-fns";
 import type { NodeWithStats } from "@workspace/api-client-react";
 
 interface NodeCardProps {
   node: NodeWithStats;
+  onSelect?: (node: NodeWithStats) => void;
 }
 
-export function NodeCard({ node }: NodeCardProps) {
+export function NodeCard({ node, onSelect }: NodeCardProps) {
   const maskedWallet = `${node.wallet.slice(0, 6)}...${node.wallet.slice(-4)}`;
   const formattedTime = node.lastRewardTimestamp 
     ? format(new Date(node.lastRewardTimestamp), "yyyy-MM-dd HH:mm:ss 'UTC'")
@@ -17,9 +17,18 @@ export function NodeCard({ node }: NodeCardProps) {
     : null;
 
   return (
-    <div 
+    <div
       id={`node-${node.id}`}
-      className="border border-[#333] bg-black p-5 flex flex-col gap-4 transition-all duration-300 hover:scale-[1.02] hover:border-white hover:shadow-[0_0_15px_rgba(255,255,255,0.1)] relative group glitch-hover"
+      role={onSelect ? "button" : undefined}
+      tabIndex={onSelect ? 0 : undefined}
+      onClick={() => onSelect?.(node)}
+      onKeyDown={(e) => {
+        if (onSelect && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          onSelect(node);
+        }
+      }}
+      className="border border-[#333] bg-black p-5 flex flex-col gap-4 transition-all duration-300 hover:scale-[1.02] hover:border-white hover:shadow-[0_0_15px_rgba(255,255,255,0.1)] relative group glitch-hover cursor-pointer focus:outline-none focus:border-white"
     >
       {/* Corner decorations */}
       <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -38,7 +47,7 @@ export function NodeCard({ node }: NodeCardProps) {
       <div className="grid grid-cols-2 gap-y-3 gap-x-4 py-3 border-y border-[#222]">
         <div className="flex flex-col">
           <span className="text-[10px] text-[#666]">MODEL</span>
-          <span className="text-sm">{node.modelName}</span>
+          <span className="text-sm">{node.modelName || "—"}</span>
         </div>
         <div className="flex flex-col">
           <span className="text-[10px] text-[#666]">VRAM</span>
@@ -66,6 +75,7 @@ export function NodeCard({ node }: NodeCardProps) {
               href={`https://testnet.monadexplorer.com/tx/${node.lastRewardTxHash}`}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
               className="text-[10px] border border-[#444] px-2 py-1 hover:bg-white hover:text-black transition-colors"
             >
               TX: {truncatedHash}

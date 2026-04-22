@@ -5,7 +5,7 @@ export const nodesTable = pgTable("nodes", {
   sessionId: text("session_id").notNull(),
   nickname: text("nickname").notNull(),
   wallet: text("wallet").notNull(),
-  modelName: text("model_name").notNull(),
+  modelName: text("model_name"),
   internetSpeed: text("internet_speed").notNull(),
   vram: text("vram").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

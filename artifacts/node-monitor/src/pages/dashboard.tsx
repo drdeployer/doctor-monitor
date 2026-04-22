@@ -25,7 +25,7 @@ import { format } from "date-fns";
 const nodeSchema = z.object({
   nickname: z.string().min(1, "Nickname is required").max(50),
   wallet: z.string().regex(/^0x[0-9a-fA-F]{40}$/, "Must be a valid 42-character hex wallet address starting with 0x"),
-  modelName: z.string().min(1, "Model name is required").max(100),
+  modelName: z.string().max(100).optional().or(z.literal("")),
   internetSpeed: z.string().min(1, "Internet speed is required"),
   vram: z.string().min(1, "VRAM amount is required"),
 });
@@ -73,7 +73,7 @@ export function Dashboard() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
-  const { data: nodes, isLoading } = useGetSessionNodes(sessionId, { query: { refetchInterval: 15000 } });
+  const { data: nodes, isLoading } = useGetSessionNodes(sessionId, { query: { refetchInterval: 15000 } as any });
   
   const createNode = useCreateNode();
   const updateNode = useUpdateNode();
@@ -146,7 +146,7 @@ export function Dashboard() {
     form.reset({
       nickname: node.nickname,
       wallet: node.wallet,
-      modelName: node.modelName,
+      modelName: node.modelName ?? "",
       internetSpeed: node.internetSpeed,
       vram: node.vram,
     });
@@ -209,7 +209,7 @@ export function Dashboard() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="modelName" className="text-xs text-[#888]">HARDWARE_MODEL</Label>
+              <Label htmlFor="modelName" className="text-xs text-[#888]">HARDWARE_MODEL <span className="text-[#555]">(OPTIONAL)</span></Label>
               <Input 
                 id="modelName" 
                 {...form.register("modelName")} 
@@ -351,7 +351,7 @@ export function Dashboard() {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[#666]">HARDWARE</span>
-                    <span className="text-white">{node.modelName}</span>
+                    <span className="text-white">{node.modelName || "—"}</span>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[#666]">UPLINK/VRAM</span>
