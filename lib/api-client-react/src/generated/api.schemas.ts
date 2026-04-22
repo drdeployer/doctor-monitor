@@ -26,6 +26,7 @@ export interface Node {
   vram: string;
   /** @nullable */
   ram: string | null;
+  walletHidden: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -43,6 +44,7 @@ export interface NodeWithStats {
   vram: string;
   /** @nullable */
   ram: string | null;
+  walletHidden: boolean;
   createdAt: string;
   updatedAt: string;
   online: boolean;
@@ -68,6 +70,7 @@ export interface NodeCreate {
   vram: string;
   /** @nullable */
   ram?: string | null;
+  walletHidden?: boolean;
 }
 
 export interface NodeUpdate {
@@ -81,6 +84,7 @@ export interface NodeUpdate {
   vram?: string;
   /** @nullable */
   ram?: string | null;
+  walletHidden?: boolean;
 }
 
 export interface RewardTx {

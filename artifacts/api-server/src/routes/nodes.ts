@@ -29,6 +29,7 @@ async function withStats(node: NodeRow) {
     internetSpeed: node.internetSpeed,
     vram: node.vram,
     ram: node.ram,
+    walletHidden: node.walletHidden,
     createdAt: node.createdAt.toISOString(),
     updatedAt: node.updatedAt.toISOString(),
     ...stats,
@@ -63,6 +64,7 @@ router.post("/nodes", async (req, res) => {
       internetSpeed: body.internetSpeed,
       vram: body.vram,
       ram: body.ram ?? null,
+      walletHidden: body.walletHidden ?? false,
     })
     .returning();
   if (!created) {
@@ -109,8 +111,43 @@ router.delete("/nodes/:id", async (req, res) => {
     res.status(400).json({ error: "Invalid id" });
     return;
   }
+  const adminPassword = process.env["ADMIN_PASSWORD"];
+  const sessionHeader = req.header("x-session-id");
+  const adminHeader = req.header("x-admin-token");
+
+  const [node] = await db
+    .select()
+    .from(nodesTable)
+    .where(eq(nodesTable.id, params.data.id));
+  if (!node) {
+    res.status(404).json({ error: "Node not found" });
+    return;
+  }
+
+  const isOwner = sessionHeader && node.sessionId === sessionHeader;
+  const isAdmin = adminPassword && adminHeader === adminPassword;
+
+  if (!isOwner && !isAdmin) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+
   await db.delete(nodesTable).where(eq(nodesTable.id, params.data.id));
   res.json({ success: true });
+});
+
+router.post("/admin/login", (req, res) => {
+  const adminPassword = process.env["ADMIN_PASSWORD"];
+  const password = typeof req.body?.password === "string" ? req.body.password : "";
+  if (!adminPassword) {
+    res.status(503).json({ error: "Admin not configured" });
+    return;
+  }
+  if (password !== adminPassword) {
+    res.status(401).json({ error: "Invalid password" });
+    return;
+  }
+  res.json({ token: adminPassword });
 });
 
 router.get("/nodes/session/:sessionId", async (req, res) => {

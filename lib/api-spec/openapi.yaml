@@ -186,6 +186,8 @@ components:
           type: string
         ram:
           type: ["string", "null"]
+        walletHidden:
+          type: boolean
         createdAt:
           type: string
         updatedAt:
@@ -200,6 +202,7 @@ components:
         - internetSpeed
         - vram
         - ram
+        - walletHidden
         - createdAt
         - updatedAt
     NodeWithStats:
@@ -223,6 +226,8 @@ components:
           type: string
         ram:
           type: ["string", "null"]
+        walletHidden:
+          type: boolean
         createdAt:
           type: string
         updatedAt:
@@ -249,6 +254,7 @@ components:
         - internetSpeed
         - vram
         - ram
+        - walletHidden
         - createdAt
         - updatedAt
         - online
@@ -276,6 +282,8 @@ components:
           type: string
         ram:
           type: ["string", "null"]
+        walletHidden:
+          type: boolean
       required:
         - sessionId
         - nickname
@@ -299,6 +307,8 @@ components:
           type: string
         ram:
           type: ["string", "null"]
+        walletHidden:
+          type: boolean
     RewardTx:
       type: object
       properties:

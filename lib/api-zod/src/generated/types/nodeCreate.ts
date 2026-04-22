@@ -18,4 +18,5 @@ export interface NodeCreate {
   vram: string;
   /** @nullable */
   ram?: string | null;
+  walletHidden?: boolean;
 }

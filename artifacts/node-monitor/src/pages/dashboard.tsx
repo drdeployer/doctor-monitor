@@ -30,6 +30,7 @@ const nodeSchema = z.object({
   internetSpeed: z.string().min(1, "Internet speed is required"),
   vram: z.string().regex(/^\d+(\.\d+)?$/, "VRAM must be a number"),
   ram: z.string().optional().refine((v) => !v || /^\d+(\.\d+)?$/.test(v), "RAM must be a number"),
+  walletHidden: z.boolean().default(false),
 });
 
 type NodeFormValues = z.infer<typeof nodeSchema>;
@@ -79,7 +80,9 @@ export function Dashboard() {
   
   const createNode = useCreateNode();
   const updateNode = useUpdateNode();
-  const deleteNode = useDeleteNode();
+  const deleteNode = useDeleteNode({
+    request: { headers: { "x-session-id": sessionId } },
+  });
 
   const [editingNodeId, setEditingNodeId] = useState<number | null>(null);
   const [expandedNodeId, setExpandedNodeId] = useState<number | null>(null);
@@ -95,6 +98,7 @@ export function Dashboard() {
       internetSpeed: "",
       vram: "",
       ram: "",
+      walletHidden: false,
     }
   });
 
@@ -119,6 +123,7 @@ export function Dashboard() {
       modelName: data.modelName || null,
       modelNumber: data.modelNumber || null,
       ram: data.ram || null,
+      walletHidden: data.walletHidden ?? false,
     };
     try {
       if (editingNodeId) {
@@ -139,7 +144,7 @@ export function Dashboard() {
       queryClient.invalidateQueries({ queryKey: getGetNetworkSummaryQueryKey() });
       
       setEditingNodeId(null);
-      form.reset({ nickname: "", wallet: "", modelName: "", modelNumber: "", internetSpeed: "", vram: "", ram: "" });
+      form.reset({ nickname: "", wallet: "", modelName: "", modelNumber: "", internetSpeed: "", vram: "", ram: "", walletHidden: false });
       setSpeedValue("");
       setSpeedUnit("Gbps");
     } catch (error) {
@@ -162,6 +167,7 @@ export function Dashboard() {
       internetSpeed: node.internetSpeed,
       vram: (node.vram || "").replace(/[^\d.]/g, ""),
       ram: (node.ram ?? "").replace(/[^\d.]/g, ""),
+      walletHidden: node.walletHidden,
     });
     setSpeedValue(parsed.value);
     setSpeedUnit(parsed.unit);
@@ -328,6 +334,27 @@ export function Dashboard() {
               {form.formState.errors.internetSpeed && <span className="text-xs text-red-500">{form.formState.errors.internetSpeed.message}</span>}
             </div>
 
+            <div className="flex flex-col gap-2">
+              <Label className="text-xs text-[#888]">WALLET_VISIBILITY</Label>
+              <button
+                type="button"
+                onClick={() => form.setValue("walletHidden", !form.watch("walletHidden"), { shouldDirty: true })}
+                className={`px-3 py-2 text-xs font-mono uppercase tracking-widest border transition-colors text-left ${
+                  form.watch("walletHidden")
+                    ? "bg-black text-[#ff3344] border-[#ff3344]"
+                    : "bg-white text-black border-white"
+                }`}
+                aria-pressed={form.watch("walletHidden")}
+              >
+                {form.watch("walletHidden")
+                  ? "[X] HIDDEN ON LIVE NODES"
+                  : "[ ] PUBLIC ON LIVE NODES"}
+              </button>
+              <span className="text-[10px] text-[#555]">
+                When hidden, the wallet is concealed on the public Live Nodes grid.
+              </span>
+            </div>
+
             <div className="flex gap-4 mt-4">
               <Button 
                 type="submit" 
@@ -342,7 +369,7 @@ export function Dashboard() {
                   variant="outline"
                   onClick={() => {
                     setEditingNodeId(null);
-                    form.reset({ nickname: "", wallet: "", modelName: "", modelNumber: "", internetSpeed: "", vram: "", ram: "" });
+                    form.reset({ nickname: "", wallet: "", modelName: "", modelNumber: "", internetSpeed: "", vram: "", ram: "", walletHidden: false });
                     setSpeedValue("");
                     setSpeedUnit("Gbps");
                   }}

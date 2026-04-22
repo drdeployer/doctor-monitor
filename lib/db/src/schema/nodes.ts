@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean } from "drizzle-orm/pg-core";
 
 export const nodesTable = pgTable("nodes", {
   id: serial("id").primaryKey(),
@@ -10,6 +10,7 @@ export const nodesTable = pgTable("nodes", {
   internetSpeed: text("internet_speed").notNull(),
   vram: text("vram").notNull(),
   ram: text("ram"),
+  walletHidden: boolean("wallet_hidden").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()

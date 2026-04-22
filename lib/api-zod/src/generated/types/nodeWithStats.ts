@@ -19,6 +19,7 @@ export interface NodeWithStats {
   vram: string;
   /** @nullable */
   ram: string | null;
+  walletHidden: boolean;
   createdAt: string;
   updatedAt: string;
   online: boolean;

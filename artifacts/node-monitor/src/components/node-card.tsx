@@ -4,6 +4,8 @@ import type { NodeWithStats } from "@workspace/api-client-react";
 interface NodeCardProps {
   node: NodeWithStats;
   onSelect?: (node: NodeWithStats) => void;
+  isAdmin?: boolean;
+  onAdminDelete?: (node: NodeWithStats) => void;
 }
 
 function formatGB(raw: string | null | undefined): string {
@@ -12,8 +14,10 @@ function formatGB(raw: string | null | undefined): string {
   return digits ? `${digits[0]} GB` : String(raw);
 }
 
-export function NodeCard({ node, onSelect }: NodeCardProps) {
-  const maskedWallet = `${node.wallet.slice(0, 6)}...${node.wallet.slice(-4)}`;
+export function NodeCard({ node, onSelect, isAdmin, onAdminDelete }: NodeCardProps) {
+  const maskedWallet = node.walletHidden
+    ? "•••••• HIDDEN"
+    : `${node.wallet.slice(0, 6)}...${node.wallet.slice(-4)}`;
   const formattedTime = node.lastRewardTimestamp 
     ? format(new Date(node.lastRewardTimestamp), "yyyy-MM-dd HH:mm:ss 'UTC'")
     : "NO REWARDS YET";
@@ -47,7 +51,22 @@ export function NodeCard({ node, onSelect }: NodeCardProps) {
           <h3 className="text-lg font-bold uppercase tracking-wider mb-1 glow-text">{node.nickname}</h3>
           <div className="text-xs text-[#888] font-mono">{maskedWallet}</div>
         </div>
-        <div className={`status-dot w-2 h-2 rounded-full ${node.online ? 'online' : 'offline'}`} title={node.online ? 'Online' : 'Offline'} />
+        <div className="flex items-center gap-2">
+          {isAdmin && onAdminDelete && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAdminDelete(node);
+              }}
+              className="text-[10px] uppercase tracking-widest text-[#ff3344] border border-[#ff3344]/40 hover:bg-[#ff3344] hover:text-black px-2 py-0.5 transition-colors"
+              title="Admin delete"
+            >
+              TERM
+            </button>
+          )}
+          <div className={`status-dot w-2 h-2 rounded-full ${node.online ? 'online' : 'offline'}`} title={node.online ? 'Online' : 'Offline'} />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-y-3 gap-x-4 py-3 border-y border-[#222]">

@@ -27,6 +27,7 @@ export const ListNodesResponseItem = zod.object({
   internetSpeed: zod.string(),
   vram: zod.string(),
   ram: zod.string().nullable(),
+  walletHidden: zod.boolean(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
   online: zod.boolean(),
@@ -50,6 +51,7 @@ export const CreateNodeBody = zod.object({
   internetSpeed: zod.string(),
   vram: zod.string(),
   ram: zod.string().nullish(),
+  walletHidden: zod.boolean().optional(),
 });
 
 export const CreateNodeResponse = zod.object({
@@ -62,6 +64,7 @@ export const CreateNodeResponse = zod.object({
   internetSpeed: zod.string(),
   vram: zod.string(),
   ram: zod.string().nullable(),
+  walletHidden: zod.boolean(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
@@ -81,6 +84,7 @@ export const UpdateNodeBody = zod.object({
   internetSpeed: zod.string().optional(),
   vram: zod.string().optional(),
   ram: zod.string().nullish(),
+  walletHidden: zod.boolean().optional(),
 });
 
 export const UpdateNodeResponse = zod.object({
@@ -93,6 +97,7 @@ export const UpdateNodeResponse = zod.object({
   internetSpeed: zod.string(),
   vram: zod.string(),
   ram: zod.string().nullable(),
+  walletHidden: zod.boolean(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
@@ -125,6 +130,7 @@ export const GetSessionNodesResponseItem = zod.object({
   internetSpeed: zod.string(),
   vram: zod.string(),
   ram: zod.string().nullable(),
+  walletHidden: zod.boolean(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
   online: zod.boolean(),

@@ -1,12 +1,20 @@
 import { useState, useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useListNodes,
   useGetNetworkSummary,
+  useDeleteNode,
+  getListNodesQueryKey,
+  getGetNetworkSummaryQueryKey,
   type NodeWithStats,
 } from "@workspace/api-client-react";
 import { NodeCard } from "@/components/node-card";
 import { NodeDetailModal } from "@/components/node-detail-modal";
+import { AdminLoginModal } from "@/components/admin-login-modal";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
+
+const ADMIN_TOKEN_KEY = "node-monitor:admin-token";
 
 function AnimatedLines({ nodes }: { nodes: any[] }) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -78,13 +86,70 @@ function AnimatedLines({ nodes }: { nodes: any[] }) {
 }
 
 export function Home() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const { data: nodes, isLoading: isLoadingNodes } = useListNodes({ query: { refetchInterval: 15000 } as any });
   const { data: summary, isLoading: isLoadingSummary } = useGetNetworkSummary({ query: { refetchInterval: 15000 } as any });
   const [selectedNode, setSelectedNode] = useState<NodeWithStats | null>(null);
+  const [adminToken, setAdminToken] = useState<string | null>(() =>
+    typeof window === "undefined" ? null : window.localStorage.getItem(ADMIN_TOKEN_KEY)
+  );
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const deleteNode = useDeleteNode({
+    request: { headers: adminToken ? { "x-admin-token": adminToken } : {} },
+  });
+
+  const invalidateNodes = () => {
+    queryClient.invalidateQueries({ queryKey: getListNodesQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getGetNetworkSummaryQueryKey() });
+  };
+
+  const handleAdminDelete = async (node: NodeWithStats) => {
+    if (!adminToken) return;
+    if (!confirm(`ADMIN: TERMINATE NODE [${node.nickname}]? THIS ACTION IS IRREVERSIBLE.`)) return;
+    try {
+      await deleteNode.mutateAsync({ id: node.id });
+      invalidateNodes();
+      toast({ title: "ADMIN_ACTION", description: `NODE [${node.nickname}] TERMINATED` });
+    } catch (err: any) {
+      if (err?.status === 401 || err?.status === 403) {
+        window.localStorage.removeItem(ADMIN_TOKEN_KEY);
+        setAdminToken(null);
+        toast({ title: "ADMIN_ERROR", description: "SESSION EXPIRED — RE-AUTHENTICATE", variant: "destructive" });
+      } else {
+        toast({ title: "SYSTEM_ERROR", description: "FAILED TO TERMINATE NODE", variant: "destructive" });
+      }
+    }
+  };
+
+  const handleAdminLogout = () => {
+    window.localStorage.removeItem(ADMIN_TOKEN_KEY);
+    setAdminToken(null);
+    toast({ title: "ADMIN_LOGOUT", description: "ADMIN SESSION CLOSED" });
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 relative">
-      
+      <div className="flex justify-end mb-3 relative z-10">
+        {adminToken ? (
+          <button
+            type="button"
+            onClick={handleAdminLogout}
+            className="text-[10px] font-mono uppercase tracking-widest border border-[#ff3344] text-[#ff3344] hover:bg-[#ff3344] hover:text-black px-3 py-1 transition-colors"
+          >
+            ADMIN: ACTIVE • LOGOUT
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowAdminLogin(true)}
+            className="text-[10px] font-mono uppercase tracking-widest border border-[#444] text-[#888] hover:border-white hover:text-white px-3 py-1 transition-colors"
+          >
+            ADMIN_LOGIN
+          </button>
+        )}
+      </div>
+
       {/* Network Summary Strip */}
       <div className="border border-[#333] p-4 mb-8 bg-black/50 backdrop-blur-sm relative z-10 flex flex-wrap gap-8 justify-between items-center">
         {isLoadingSummary ? (
@@ -129,7 +194,13 @@ export function Home() {
             ))
           ) : nodes && nodes.length > 0 ? (
             nodes.map((node) => (
-              <NodeCard key={node.id} node={node} onSelect={setSelectedNode} />
+              <NodeCard
+                key={node.id}
+                node={node}
+                onSelect={setSelectedNode}
+                isAdmin={!!adminToken}
+                onAdminDelete={handleAdminDelete}
+              />
             ))
           ) : (
             <div className="col-span-full border border-[#333] p-12 text-center text-[#888]">
@@ -143,6 +214,18 @@ export function Home() {
         <NodeDetailModal
           node={selectedNode}
           onClose={() => setSelectedNode(null)}
+        />
+      )}
+
+      {showAdminLogin && (
+        <AdminLoginModal
+          onClose={() => setShowAdminLogin(false)}
+          onSuccess={(token) => {
+            window.localStorage.setItem(ADMIN_TOKEN_KEY, token);
+            setAdminToken(token);
+            setShowAdminLogin(false);
+            toast({ title: "ADMIN_AUTH", description: "ADMIN SESSION ESTABLISHED" });
+          }}
         />
       )}
     </div>

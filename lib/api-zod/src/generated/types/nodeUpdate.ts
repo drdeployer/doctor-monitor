@@ -17,4 +17,5 @@ export interface NodeUpdate {
   vram?: string;
   /** @nullable */
   ram?: string | null;
+  walletHidden?: boolean;
 }
