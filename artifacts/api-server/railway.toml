@@ -1,5 +1,6 @@
 [build]
-buildCommand = "pnpm install --no-frozen-lockfile && pnpm run build"
+builder = "NIXPACKS"
+buildCommand = "pnpm install && pnpm run build"
 
 [deploy]
-startCommand = "node artifacts/api-server/index.js"
+startCommand = "node artifacts/api-server/dist/index.mjs"
