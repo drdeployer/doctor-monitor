@@ -42,7 +42,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <header className="border-b border-[#333] bg-black z-10 relative">
         <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-6">
-            <h1 className="text-xl font-bold tracking-widest glow-text">NODE//MONITOR</h1>
+            <h1 className="text-xl font-bold tracking-widest glow-text">DR. MONITOR</h1>
             <div className="hidden md:flex text-xs text-[#888] animate-pulse">
               [{scanText}]
             </div>

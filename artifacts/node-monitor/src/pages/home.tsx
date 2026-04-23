@@ -16,6 +16,15 @@ import { useToast } from "@/hooks/use-toast";
 
 const ADMIN_TOKEN_KEY = "node-monitor:admin-token";
 
+function utcDateString(offsetDays = 0): string {
+  const now = new Date();
+  now.setUTCDate(now.getUTCDate() - offsetDays);
+  const y = now.getUTCFullYear();
+  const m = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(now.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 function AnimatedLines({ nodes }: { nodes: any[] }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [lines, setLines] = useState<{ id: string; x1: number; y1: number; x2: number; y2: number }[]>([]);
@@ -88,8 +97,15 @@ function AnimatedLines({ nodes }: { nodes: any[] }) {
 export function Home() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { data: nodes, isLoading: isLoadingNodes } = useListNodes({ query: { refetchInterval: 15000 } as any });
-  const { data: summary, isLoading: isLoadingSummary } = useGetNetworkSummary({ query: { refetchInterval: 15000 } as any });
+  const [selectedDate, setSelectedDate] = useState<string>(utcDateString(0));
+  const { data: nodes, isLoading: isLoadingNodes } = useListNodes(
+    { date: selectedDate },
+    { query: { refetchInterval: 15000 } as any },
+  );
+  const { data: summary, isLoading: isLoadingSummary } = useGetNetworkSummary(
+    { date: selectedDate },
+    { query: { refetchInterval: 15000 } as any },
+  );
   const [selectedNode, setSelectedNode] = useState<NodeWithStats | null>(null);
   const [adminToken, setAdminToken] = useState<string | null>(() =>
     typeof window === "undefined" ? null : window.localStorage.getItem(ADMIN_TOKEN_KEY)
@@ -148,6 +164,44 @@ export function Home() {
             ADMIN_LOGIN
           </button>
         )}
+      </div>
+
+      {/* Date selector */}
+      <div className="border border-[#333] p-4 mb-4 bg-black/50 backdrop-blur-sm relative z-10 flex flex-col md:flex-row md:items-end gap-4">
+        <div className="flex flex-col gap-2 flex-1">
+          <span className="text-[10px] text-[#666] uppercase tracking-wider">SELECT_DATE (UTC)</span>
+          <input
+            type="date"
+            value={selectedDate}
+            max={utcDateString(0)}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="bg-black border border-[#444] rounded-none px-3 py-2 text-sm font-mono text-white focus:outline-none focus:border-white [color-scheme:dark] max-w-[220px]"
+          />
+        </div>
+        <div className="grid grid-cols-3 gap-2 md:max-w-md md:flex-1">
+          {[
+            { label: "TODAY", offset: 0 },
+            { label: "DAY BEFORE", offset: 1 },
+            { label: "TWO DAYS BEFORE", offset: 2 },
+          ].map((preset) => {
+            const value = utcDateString(preset.offset);
+            const active = selectedDate === value;
+            return (
+              <button
+                key={preset.label}
+                type="button"
+                onClick={() => setSelectedDate(value)}
+                className={`text-[10px] font-mono uppercase tracking-wider border px-2 py-2 transition-colors ${
+                  active
+                    ? "bg-white text-black border-white"
+                    : "bg-black text-[#888] border-[#444] hover:border-white hover:text-white"
+                }`}
+              >
+                {preset.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Network Summary Strip */}

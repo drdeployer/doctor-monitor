@@ -113,7 +113,10 @@ export async function getRewardsForWallet(wallet: string): Promise<RewardTx[]> {
   }
 }
 
-export function summarizeRewards(rewards: RewardTx[]): {
+export function summarizeRewards(
+  rewards: RewardTx[],
+  dateUtc?: string,
+): {
   lastRewardAmount: number | null;
   lastRewardTxHash: string | null;
   lastRewardTimestamp: string | null;
@@ -121,6 +124,23 @@ export function summarizeRewards(rewards: RewardTx[]): {
   rewardCountToday: number;
   online: boolean;
 } {
+  const now = new Date();
+
+  let dayStart: number;
+  let dayEnd: number;
+  if (dateUtc && /^\d{4}-\d{2}-\d{2}$/.test(dateUtc)) {
+    const [y, m, d] = dateUtc.split("-").map(Number);
+    dayStart = Date.UTC(y!, m! - 1, d!);
+    dayEnd = dayStart + 24 * 60 * 60 * 1000;
+  } else {
+    dayStart = Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+    );
+    dayEnd = dayStart + 24 * 60 * 60 * 1000;
+  }
+
   if (rewards.length === 0) {
     return {
       lastRewardAmount: null,
@@ -132,27 +152,22 @@ export function summarizeRewards(rewards: RewardTx[]): {
     };
   }
 
-  const last = rewards[0]!;
-  const now = new Date();
-  const utcDayStart = Date.UTC(
-    now.getUTCFullYear(),
-    now.getUTCMonth(),
-    now.getUTCDate(),
-  );
+  const inDay = rewards.filter((r) => {
+    const t = new Date(r.timestamp).getTime();
+    return t >= dayStart && t < dayEnd;
+  });
+  const dailyAccumulated = inDay.reduce((sum, r) => sum + r.amount, 0);
 
-  const todays = rewards.filter(
-    (r) => new Date(r.timestamp).getTime() >= utcDayStart,
-  );
-  const dailyAccumulated = todays.reduce((sum, r) => sum + r.amount, 0);
+  const last = rewards[0]!;
   const lastTs = new Date(last.timestamp).getTime();
-  const online = now.getTime() - lastTs < 90 * 60 * 1000; // online if reward in last 90 min
+  const online = now.getTime() - lastTs < 90 * 60 * 1000;
 
   return {
     lastRewardAmount: last.amount,
     lastRewardTxHash: last.txHash,
     lastRewardTimestamp: last.timestamp,
     dailyAccumulated,
-    rewardCountToday: todays.length,
+    rewardCountToday: inDay.length,
     online,
   };
 }

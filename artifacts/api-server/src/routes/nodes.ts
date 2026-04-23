@@ -16,9 +16,9 @@ import {
 
 const router: IRouter = Router();
 
-async function withStats(node: NodeRow) {
+async function withStats(node: NodeRow, dateUtc?: string) {
   const rewards = await getRewardsForWallet(node.wallet);
-  const stats = summarizeRewards(rewards);
+  const stats = summarizeRewards(rewards, dateUtc);
   return {
     id: node.id,
     sessionId: node.sessionId,
@@ -36,9 +36,10 @@ async function withStats(node: NodeRow) {
   };
 }
 
-router.get("/nodes", async (_req, res) => {
+router.get("/nodes", async (req, res) => {
+  const dateUtc = typeof req.query["date"] === "string" ? req.query["date"] : undefined;
   const rows = await db.select().from(nodesTable);
-  const enriched = await Promise.all(rows.map(withStats));
+  const enriched = await Promise.all(rows.map((r) => withStats(r, dateUtc)));
   res.json(enriched);
 });
 
@@ -182,9 +183,10 @@ router.get("/nodes/:id/transactions", async (req, res) => {
   res.json(rewards.slice(0, 200));
 });
 
-router.get("/network/summary", async (_req, res) => {
+router.get("/network/summary", async (req, res) => {
+  const dateUtc = typeof req.query["date"] === "string" ? req.query["date"] : undefined;
   const rows = await db.select().from(nodesTable);
-  const enriched = await Promise.all(rows.map(withStats));
+  const enriched = await Promise.all(rows.map((r) => withStats(r, dateUtc)));
   const onlineNodes = enriched.filter((n) => n.online).length;
   const totalDailyRewards = enriched.reduce(
     (sum, n) => sum + n.dailyAccumulated,

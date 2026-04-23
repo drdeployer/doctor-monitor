@@ -99,3 +99,19 @@ export interface NetworkSummary {
   totalDailyRewards: number;
   totalRewardCountToday: number;
 }
+
+export type ListNodesParams = {
+  /**
+   * UTC date (YYYY-MM-DD) used to compute daily stats. Defaults to today.
+   * @pattern ^\d{4}-\d{2}-\d{2}$
+   */
+  date?: string;
+};
+
+export type GetNetworkSummaryParams = {
+  /**
+   * UTC date (YYYY-MM-DD) used to compute daily stats. Defaults to today.
+   * @pattern ^\d{4}-\d{2}-\d{2}$
+   */
+  date?: string;
+};

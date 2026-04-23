@@ -17,6 +17,18 @@ export const HealthCheckResponse = zod.object({
 /**
  * @summary List all live nodes with reward stats
  */
+export const listNodesQueryDateRegExp = new RegExp("^\\d{4}-\\d{2}-\\d{2}$");
+
+export const ListNodesQueryParams = zod.object({
+  date: zod.coerce
+    .string()
+    .regex(listNodesQueryDateRegExp)
+    .optional()
+    .describe(
+      "UTC date (YYYY-MM-DD) used to compute daily stats. Defaults to today.",
+    ),
+});
+
 export const ListNodesResponseItem = zod.object({
   id: zod.number(),
   sessionId: zod.string(),
@@ -161,6 +173,20 @@ export const GetNodeTransactionsResponse = zod.array(
 /**
  * @summary Aggregate network stats
  */
+export const getNetworkSummaryQueryDateRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
+
+export const GetNetworkSummaryQueryParams = zod.object({
+  date: zod.coerce
+    .string()
+    .regex(getNetworkSummaryQueryDateRegExp)
+    .optional()
+    .describe(
+      "UTC date (YYYY-MM-DD) used to compute daily stats. Defaults to today.",
+    ),
+});
+
 export const GetNetworkSummaryResponse = zod.object({
   totalNodes: zod.number(),
   onlineNodes: zod.number(),

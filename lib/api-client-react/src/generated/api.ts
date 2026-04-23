@@ -18,7 +18,9 @@ import type {
 
 import type {
   DeleteResponse,
+  GetNetworkSummaryParams,
   HealthStatus,
+  ListNodesParams,
   NetworkSummary,
   Node,
   NodeCreate,
@@ -114,37 +116,57 @@ export function useHealthCheck<
 /**
  * @summary List all live nodes with reward stats
  */
-export const getListNodesUrl = () => {
-  return `/api/nodes`;
+export const getListNodesUrl = (params?: ListNodesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/nodes?${stringifiedParams}`
+    : `/api/nodes`;
 };
 
 export const listNodes = async (
+  params?: ListNodesParams,
   options?: RequestInit,
 ): Promise<NodeWithStats[]> => {
-  return customFetch<NodeWithStats[]>(getListNodesUrl(), {
+  return customFetch<NodeWithStats[]>(getListNodesUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getListNodesQueryKey = () => {
-  return [`/api/nodes`] as const;
+export const getListNodesQueryKey = (params?: ListNodesParams) => {
+  return [`/api/nodes`, ...(params ? [params] : [])] as const;
 };
 
 export const getListNodesQueryOptions = <
   TData = Awaited<ReturnType<typeof listNodes>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<Awaited<ReturnType<typeof listNodes>>, TError, TData>;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: ListNodesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listNodes>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getListNodesQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getListNodesQueryKey(params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof listNodes>>> = ({
     signal,
-  }) => listNodes({ signal, ...requestOptions });
+  }) => listNodes(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof listNodes>>,
@@ -165,11 +187,18 @@ export type ListNodesQueryError = ErrorType<unknown>;
 export function useListNodes<
   TData = Awaited<ReturnType<typeof listNodes>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<Awaited<ReturnType<typeof listNodes>>, TError, TData>;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getListNodesQueryOptions(options);
+>(
+  params?: ListNodesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listNodes>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListNodesQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
@@ -613,41 +642,60 @@ export function useGetNodeTransactions<
 /**
  * @summary Aggregate network stats
  */
-export const getGetNetworkSummaryUrl = () => {
-  return `/api/network/summary`;
+export const getGetNetworkSummaryUrl = (params?: GetNetworkSummaryParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/network/summary?${stringifiedParams}`
+    : `/api/network/summary`;
 };
 
 export const getNetworkSummary = async (
+  params?: GetNetworkSummaryParams,
   options?: RequestInit,
 ): Promise<NetworkSummary> => {
-  return customFetch<NetworkSummary>(getGetNetworkSummaryUrl(), {
+  return customFetch<NetworkSummary>(getGetNetworkSummaryUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetNetworkSummaryQueryKey = () => {
-  return [`/api/network/summary`] as const;
+export const getGetNetworkSummaryQueryKey = (
+  params?: GetNetworkSummaryParams,
+) => {
+  return [`/api/network/summary`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetNetworkSummaryQueryOptions = <
   TData = Awaited<ReturnType<typeof getNetworkSummary>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getNetworkSummary>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: GetNetworkSummaryParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getNetworkSummary>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetNetworkSummaryQueryKey();
+  const queryKey =
+    queryOptions?.queryKey ?? getGetNetworkSummaryQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof getNetworkSummary>>
-  > = ({ signal }) => getNetworkSummary({ signal, ...requestOptions });
+  > = ({ signal }) => getNetworkSummary(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getNetworkSummary>>,
@@ -668,15 +716,18 @@ export type GetNetworkSummaryQueryError = ErrorType<unknown>;
 export function useGetNetworkSummary<
   TData = Awaited<ReturnType<typeof getNetworkSummary>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getNetworkSummary>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetNetworkSummaryQueryOptions(options);
+>(
+  params?: GetNetworkSummaryParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getNetworkSummary>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetNetworkSummaryQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
