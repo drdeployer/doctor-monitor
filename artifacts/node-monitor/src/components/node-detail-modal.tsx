@@ -101,7 +101,7 @@ export function NodeDetailModal({ node, onClose }: Props) {
                 DAILY_REWARD
               </span>
               <span className="text-2xl font-bold text-[#00ff88]">
-                {dailyReward.toFixed(4)}
+                {dailyReward.toFixed(4)} <span className="text-sm">FOR</span>
               </span>
             </div>
             <div className="flex flex-col">
@@ -172,11 +172,20 @@ export function NodeDetailModal({ node, onClose }: Props) {
                     rel="noopener noreferrer"
                     className="flex items-center justify-between gap-3 px-3 py-2 border border-[#1a1a1a] hover:border-[#00ff88] transition-colors text-[#00ff88]"
                   >
-                    <span className="text-sm font-bold tracking-wider">
-                      {tx.amount.toFixed(3)}
+                    <span className="text-sm font-bold tracking-wider flex items-center gap-2">
+                      {(Math.round(tx.amount) === 440 || Math.round(tx.amount) === 800) && (
+                        <span
+                          aria-label="Bonus reward"
+                          title="Bonus reward"
+                          className="text-base leading-none drop-shadow-[0_0_4px_#00ff88]"
+                        >
+                          👑
+                        </span>
+                      )}
+                      {tx.amount.toFixed(3)} FOR
                     </span>
                     <span className="text-[10px] text-[#00ff88]/70 uppercase tracking-wider">
-                      FOR {format(new Date(tx.timestamp), "HH:mm:ss")}
+                      AT {format(new Date(tx.timestamp), "HH:mm:ss")}
                     </span>
                   </a>
                 </li>

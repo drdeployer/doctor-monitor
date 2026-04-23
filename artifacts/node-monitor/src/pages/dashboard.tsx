@@ -86,7 +86,6 @@ export function Dashboard() {
 
   const [editingNodeId, setEditingNodeId] = useState<number | null>(null);
   const [expandedNodeId, setExpandedNodeId] = useState<number | null>(null);
-  const [walletVisible, setWalletVisible] = useState<boolean>(false);
 
   const form = useForm<NodeFormValues>({
     resolver: zodResolver(nodeSchema),
@@ -389,19 +388,6 @@ export function Dashboard() {
           <h2 className="text-xl font-bold tracking-widest uppercase">
             OPERATOR_NODES // SESSION: {sessionId.split('-')[0]}
           </h2>
-          <button
-            type="button"
-            onClick={() => setWalletVisible((v) => !v)}
-            className={`text-[10px] font-mono uppercase tracking-widest border px-3 py-1 transition-colors ${
-              walletVisible
-                ? "bg-white text-black border-white"
-                : "bg-black text-[#888] border-[#444] hover:border-white hover:text-white"
-            }`}
-            aria-pressed={walletVisible}
-            title="Toggle wallet visibility"
-          >
-            WALLET: {walletVisible ? "VISIBLE" : "HIDDEN"}
-          </button>
         </div>
 
         {isLoading ? (
@@ -436,13 +422,9 @@ export function Dashboard() {
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-                  <div className="flex flex-col">
+                  <div className="flex flex-col col-span-2">
                     <span className="text-[#666]">WALLET</span>
-                    <span className="text-white font-mono break-all">
-                      {walletVisible
-                        ? node.wallet
-                        : "•".repeat(10) + " HIDDEN"}
-                    </span>
+                    <span className="text-white font-mono break-all">{node.wallet}</span>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[#666]">HARDWARE</span>
@@ -466,7 +448,7 @@ export function Dashboard() {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[#666]">DAILY_REWARD</span>
-                    <span className="text-white font-bold">{node.dailyAccumulated.toFixed(4)}</span>
+                    <span className="text-white font-bold">{node.dailyAccumulated.toFixed(4)} FOR</span>
                   </div>
                 </div>
 
