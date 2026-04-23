@@ -6,6 +6,9 @@ RUN npm install -g pnpm
 
 COPY . .
 
+# Force cache bust
+ARG CACHEBUST=1
+
 RUN pnpm install --no-frozen-lockfile
 
 RUN pnpm --filter @workspace/node-monitor run build
