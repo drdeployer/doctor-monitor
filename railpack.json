@@ -1,9 +1,14 @@
 {
   "install": {
-    "cmds": ["npm install -g pnpm", "pnpm install"]
+    "cmds": [
+      "npm install -g pnpm",
+      "pnpm install --no-frozen-lockfile"
+    ]
   },
   "build": {
-    "cmds": ["pnpm --filter @workspace/api-server run build"]
+    "cmds": [
+      "pnpm --filter @workspace/api-server run build"
+    ]
   },
   "start": {
     "cmd": "node artifacts/api-server/dist/index.mjs"
