@@ -5,7 +5,11 @@ nixPkgs = ["nodejs_20"]
 cmds = ["npm install -g pnpm && pnpm install"]
 
 [phases.build]
-cmds = ["pnpm run build", "pnpm --filter @workspace/api-server run build"]
+cmds = [
+  "pnpm --filter @workspace/api-server run build",
+  "ls -la artifacts/api-server/",
+  "ls -la artifacts/api-server/dist/ || echo 'NO DIST FOLDER'"
+]
 
 [start]
 cmd = "node artifacts/api-server/dist/index.mjs"
