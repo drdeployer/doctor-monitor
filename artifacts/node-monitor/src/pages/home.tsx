@@ -235,11 +235,11 @@ export function Home() {
             </div>
             <div className="flex flex-col">
               <span className="text-[#888] text-xs uppercase tracking-wider mb-1">DAILY_REWARDS</span>
-              <span className="text-2xl font-bold">{summary.totalDailyRewards.toFixed(4)}</span>
+              <span className="text-2xl font-bold">{Math.round(summary.totalDailyRewards).toLocaleString("en-US")}</span>
             </div>
             <div className="flex flex-col">
               <span className="text-[#888] text-xs uppercase tracking-wider mb-1">REWARD_TX_COUNT</span>
-              <span className="text-2xl font-bold">{summary.totalRewardCountToday}</span>
+              <span className="text-2xl font-bold">{summary.totalRewardCountToday.toLocaleString("en-US")}</span>
             </div>
           </>
         ) : null}

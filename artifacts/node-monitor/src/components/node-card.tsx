@@ -92,7 +92,7 @@ export function NodeCard({ node, onSelect, isAdmin, onAdminDelete }: NodeCardPro
         </div>
         <div className="flex flex-col">
           <span className="text-[10px] text-[#666]">DAILY REWARD</span>
-          <span className="text-sm">{node.dailyAccumulated.toFixed(4)} FOR</span>
+          <span className="text-sm">{Math.round(node.dailyAccumulated).toLocaleString("en-US")} FOR</span>
         </div>
       </div>
 
@@ -100,7 +100,7 @@ export function NodeCard({ node, onSelect, isAdmin, onAdminDelete }: NodeCardPro
         <span className="text-[10px] text-[#666]">LAST REWARD</span>
         <div className="flex justify-between items-end">
           <div className="flex flex-col">
-            <span className="text-sm font-bold">{node.lastRewardAmount ? node.lastRewardAmount.toFixed(4) : "0.0000"} FOR</span>
+            <span className="text-sm font-bold">{Math.round(node.lastRewardAmount ?? 0).toLocaleString("en-US")} FOR</span>
             <span className="text-[10px] text-[#888]">{formattedTime}</span>
           </div>
           {truncatedHash && (

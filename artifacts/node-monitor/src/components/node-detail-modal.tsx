@@ -101,7 +101,7 @@ export function NodeDetailModal({ node, onClose }: Props) {
                 DAILY_REWARD
               </span>
               <span className="text-2xl font-bold text-[#00ff88]">
-                {dailyReward.toFixed(4)} <span className="text-sm">FOR</span>
+                {Math.round(dailyReward).toLocaleString("en-US")} <span className="text-sm">FOR</span>
               </span>
             </div>
             <div className="flex flex-col">
@@ -182,7 +182,7 @@ export function NodeDetailModal({ node, onClose }: Props) {
                           👑
                         </span>
                       )}
-                      {tx.amount.toFixed(3)} FOR
+                      {Math.round(tx.amount).toLocaleString("en-US")} FOR
                     </span>
                     <span className="text-[10px] text-[#00ff88]/70 uppercase tracking-wider">
                       AT {format(new Date(tx.timestamp), "HH:mm:ss")}

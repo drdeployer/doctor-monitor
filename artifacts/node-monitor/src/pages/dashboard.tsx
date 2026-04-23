@@ -53,7 +53,7 @@ function NodeTransactions({ nodeId }: { nodeId: number }) {
         {transactions.map((tx) => (
           <div key={tx.txHash} className="flex justify-between items-center text-xs border border-[#222] p-2 hover:border-[#444] transition-colors">
             <div className="flex flex-col">
-              <span className="text-white">{tx.amount.toFixed(4)}</span>
+              <span className="text-white">{Math.round(tx.amount).toLocaleString("en-US")} FOR</span>
               <span className="text-[#666]">{format(new Date(tx.timestamp), "yyyy-MM-dd HH:mm:ss")}</span>
             </div>
             <a 
@@ -448,7 +448,7 @@ export function Dashboard() {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[#666]">DAILY_REWARD</span>
-                    <span className="text-white font-bold">{node.dailyAccumulated.toFixed(4)} FOR</span>
+                    <span className="text-white font-bold">{Math.round(node.dailyAccumulated).toLocaleString("en-US")} FOR</span>
                   </div>
                 </div>
 
