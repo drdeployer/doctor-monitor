@@ -20,6 +20,4 @@ COPY . .
 
 RUN pnpm --filter @workspace/api-server run build
 
-EXPOSE 3000
-
-CMD ["node", "artifacts/api-server/dist/index.mjs"]
+CMD ["sh", "-c", "pnpm --filter @workspace/db run push && node artifacts/api-server/dist/index.mjs"]
