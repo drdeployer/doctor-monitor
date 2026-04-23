@@ -106,6 +106,13 @@ export function Home() {
     { date: selectedDate },
     { query: { refetchInterval: 15000 } as any },
   );
+
+  const sortedNodes = nodes
+    ? [...nodes].sort((a, b) => {
+        if (a.online !== b.online) return a.online ? -1 : 1;
+        return b.dailyAccumulated - a.dailyAccumulated;
+      })
+    : nodes;
   const [selectedNode, setSelectedNode] = useState<NodeWithStats | null>(null);
   const [adminToken, setAdminToken] = useState<string | null>(() =>
     typeof window === "undefined" ? null : window.localStorage.getItem(ADMIN_TOKEN_KEY)
@@ -246,8 +253,8 @@ export function Home() {
             Array(8).fill(0).map((_, i) => (
               <Skeleton key={i} className="h-64 w-full bg-[#111] border border-[#333]" />
             ))
-          ) : nodes && nodes.length > 0 ? (
-            nodes.map((node) => (
+          ) : sortedNodes && sortedNodes.length > 0 ? (
+            sortedNodes.map((node) => (
               <NodeCard
                 key={node.id}
                 node={node}
